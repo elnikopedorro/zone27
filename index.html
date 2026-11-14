@@ -3,44 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Potrero Sector Blitz Exam • Zones 27A / 27B / 27C</title>
+    <title>Potrero Sector Map Trainer & Challenge (Zones 27A / 27B / 27C)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #090e14;
+            background-color: #0b1116;
             color: #e2e8f0;
+            overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
         }
         .mono {
             font-family: 'JetBrains Mono', monospace;
         }
-        .topo-grid {
-            background-color: #0b1219;
+        .topo-bg {
+            background-color: #0d151c;
             background-image: 
-                radial-gradient(rgba(16, 185, 129, 0.08) 1px, transparent 1px),
-                linear-gradient(to right, rgba(30, 41, 59, 0.45) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(30, 41, 59, 0.45) 1px, transparent 1px);
-            background-size: 20px 20px, 80px 80px, 80px 80px;
-        }
-        @keyframes pulseGlow {
-            0%, 100% { transform: scale(1); opacity: 0.95; }
-            50% { transform: scale(1.45); opacity: 0.35; }
-        }
-        .node-pulse {
-            transform-box: fill-box;
-            transform-origin: center;
-            animation: pulseGlow 1.5s infinite ease-in-out;
+                radial-gradient(rgba(56, 189, 248, 0.08) 1px, transparent 1px),
+                linear-gradient(to right, rgba(30, 41, 59, 0.4) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(30, 41, 59, 0.4) 1px, transparent 1px);
+            background-size: 24px 24px, 96px 96px, 96px 96px;
         }
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
         }
         .animate-shake {
-            animation: shake 0.35s ease-in-out;
+            animation: shake 0.4s ease-in-out;
         }
         ::-webkit-scrollbar {
             width: 6px;
@@ -53,1400 +47,1152 @@
             background: #334155;
             border-radius: 3px;
         }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        svg text {
+            pointer-events: none;
+        }
+        /* Drag & Drop / Tap Challenge Styles */
+        .chip {
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: grab;
+            transition: all 0.15s;
+        }
+        .chip:hover:not(:disabled) {
+            border-color: #34d399;
+            background: #1e293b;
+        }
+        .chip.selected {
+            outline: 2px solid #38bdf8;
+            background: #0c4a6e;
+            color: #fff;
+        }
+        .chip.used {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+        .target-slot {
+            min-height: 36px;
+            border: 1.5px dashed #475569;
+            border-radius: 8px;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            background: #090e14;
+            cursor: pointer;
+            font-size: 0.78rem;
+            transition: all 0.15s;
+        }
+        .target-slot.over {
+            border-color: #38bdf8;
+            background: #0c4a6e44;
+        }
+        .target-slot.correct {
+            border: 1.5px solid #10b981;
+            background: #064e3b66;
+            color: #a7f3d0;
+        }
+        .target-slot.incorrect {
+            border: 1.5px solid #f43f5e;
+            background: #88133766;
+            color: #fecdd3;
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="h-screen w-screen flex flex-col">
 
-    <!-- Top Tactical Exam Bar -->
-    <header class="bg-slate-900/95 border-b border-slate-800 px-4 py-3 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-30 shadow-xl">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-center text-amber-400 shadow-inner">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+    <!-- Top Navigation & Tactical Header -->
+    <header class="bg-slate-900/95 border-b border-slate-800 px-3 py-2 flex flex-wrap items-center justify-between gap-2 z-20 shrink-0 shadow-lg">
+        <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-lg bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
                 </svg>
             </div>
             <div>
                 <div class="flex items-center gap-2">
-                    <h1 class="font-extrabold text-base sm:text-lg tracking-tight text-white">POTRERO SECTOR BLITZ EXAM</h1>
-                    <span class="mono text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ZONES 27A • 27B • 27C</span>
+                    <h1 class="font-bold text-sm sm:text-base tracking-wide text-slate-100">POTRERO SECTOR MAP</h1>
+                    <span class="mono text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">CA-94 / ZONES 27A-C</span>
                 </div>
-                <p class="text-xs text-slate-400">Potrero, California • Tactical Route & Landmark Certification Portal</p>
+                <p class="text-[11px] text-slate-400 hidden sm:block">Tactical Landmark, Route & Clue Challenge Suite</p>
             </div>
         </div>
 
-        <div class="flex items-center gap-2.5">
-            <button id="btn-abort-exam" onclick="returnToSetup()" class="hidden px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition">
-                ✕ Exit Exam
+        <!-- Game Mode Selector Tabs -->
+        <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 overflow-x-auto max-w-full">
+            <button onclick="setGameMode('explore')" id="btn-mode-explore" class="mode-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap bg-emerald-600 text-white shadow">
+                <span>🧭</span> Explore
             </button>
-            <div class="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl flex items-center gap-3 text-xs">
-                <div>
-                    <span class="text-slate-500 block text-[10px] uppercase">Status</span>
-                    <span id="header-status" class="mono font-bold text-amber-400">STANDBY</span>
-                </div>
-                <div class="h-6 w-px bg-slate-800"></div>
-                <div>
-                    <span class="text-slate-500 block text-[10px] uppercase">Score</span>
-                    <span id="header-score" class="mono font-bold text-emerald-400">0 / 0</span>
-                </div>
+            <button onclick="setGameMode('locator')" id="btn-mode-locator" class="mode-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap text-slate-400 hover:text-white">
+                <span>🎯</span> Locator
+            </button>
+            <button onclick="setGameMode('challenge')" id="btn-mode-challenge" class="mode-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap text-slate-400 hover:text-white">
+                <span>🧩</span> Map Challenge
+            </button>
+            <button onclick="setGameMode('route')" id="btn-mode-route" class="mode-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap text-slate-400 hover:text-white">
+                <span>🛣️</span> Route Nav
+            </button>
+            <button onclick="setGameMode('blitz')" id="btn-mode-blitz" class="mode-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap text-slate-400 hover:text-white">
+                <span>⚡</span> Blitz
+            </button>
+        </div>
+
+        <!-- Scoreboard Stats -->
+        <div class="flex items-center gap-3 bg-slate-950/90 px-3 py-1.5 rounded-xl border border-slate-800 text-xs">
+            <div class="text-center">
+                <div class="text-[10px] text-slate-400 uppercase">Score</div>
+                <div id="stat-score" class="mono font-bold text-emerald-400 text-sm">0</div>
+            </div>
+            <div class="h-6 w-px bg-slate-800"></div>
+            <div class="text-center">
+                <div class="text-[10px] text-slate-400 uppercase">Streak</div>
+                <div id="stat-streak" class="mono font-bold text-amber-400 text-sm">0🔥</div>
+            </div>
+            <div class="h-6 w-px bg-slate-800"></div>
+            <div class="text-center">
+                <div class="text-[10px] text-slate-400 uppercase">Accuracy</div>
+                <div id="stat-acc" class="mono font-bold text-sky-400 text-sm">100%</div>
             </div>
         </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 flex flex-col justify-center">
+    <!-- Main Workspace -->
+    <div class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
 
-        <!-- ==================== VIEW 1: EXAM CONFIGURATION START SCREEN ==================== -->
-        <section id="view-setup" class="max-w-3xl w-full mx-auto bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-8 shadow-2xl space-y-6">
-            <div class="border-b border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                    <span class="mono text-xs font-bold text-amber-400 uppercase tracking-wider">Pre-Deployment Assessment</span>
-                    <h2 class="text-2xl font-extrabold text-white mt-1">Configure Sector Blitz Exam</h2>
+        <!-- Interactive Map Viewport -->
+        <div id="map-container" class="relative flex-1 topo-bg overflow-hidden cursor-grab active:cursor-grabbing touch-none">
+            
+            <!-- Top-Left Map Filters -->
+            <div class="absolute top-3 left-3 z-10 flex flex-wrap items-center gap-1.5 pointer-events-auto">
+                <div class="bg-slate-900/90 backdrop-blur border border-slate-700/80 rounded-xl p-1 flex items-center gap-1 shadow-lg">
+                    <button onclick="focusZone('ALL')" id="zone-btn-ALL" class="zone-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-700 text-white transition">All Zones</button>
+                    <button onclick="focusZone('27A')" id="zone-btn-27A" class="zone-filter-btn px-2.5 py-1 rounded-lg text-xs font-semibold text-sky-300 hover:bg-slate-800 transition">27A (West)</button>
+                    <button onclick="focusZone('27B')" id="zone-btn-27B" class="zone-filter-btn px-2.5 py-1 rounded-lg text-xs font-semibold text-amber-300 hover:bg-slate-800 transition">27B (South)</button>
+                    <button onclick="focusZone('27C')" id="zone-btn-27C" class="zone-filter-btn px-2.5 py-1 rounded-lg text-xs font-semibold text-emerald-300 hover:bg-slate-800 transition">27C (NE)</button>
                 </div>
-                <span class="mono text-xs px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-400">32 Tactical Scenarios Ready</span>
-            </div>
 
-            <!-- Setting 1: Exam Length -->
-            <div class="space-y-2.5">
-                <label class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                    <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mono text-[11px]">1</span>
-                    Select Exam Length
-                </label>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    <button onclick="selectConfig('length', 10)" id="cfg-length-10" class="cfg-length-btn p-3.5 rounded-xl border text-left transition bg-emerald-600/20 border-emerald-500 text-white">
-                        <div class="font-bold text-sm">10 Questions</div>
-                        <div class="text-xs text-slate-300 mt-0.5">Quick Sector Drill</div>
-                    </button>
-                    <button onclick="selectConfig('length', 20)" id="cfg-length-20" class="cfg-length-btn p-3.5 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-slate-700 text-left transition text-slate-300">
-                        <div class="font-bold text-sm">20 Questions</div>
-                        <div class="text-xs text-slate-400 mt-0.5">Standard Field Test</div>
-                    </button>
-                    <button onclick="selectConfig('length', 30)" id="cfg-length-30" class="cfg-length-btn p-3.5 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-slate-700 text-left transition text-slate-300">
-                        <div class="font-bold text-sm">30 Questions</div>
-                        <div class="text-xs text-slate-400 mt-0.5">Full Certification Exam</div>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Setting 2: Zone Filter -->
-            <div class="space-y-2.5">
-                <label class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                    <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mono text-[11px]">2</span>
-                    Select Sector / Zone Coverage
-                </label>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    <button onclick="selectConfig('zone', 'ALL')" id="cfg-zone-ALL" class="cfg-zone-btn p-3 rounded-xl border text-left transition bg-amber-500/20 border-amber-500 text-white">
-                        <div class="font-bold text-xs sm:text-sm">All Zones</div>
-                        <div class="text-[11px] text-amber-200/80 mt-0.5">27A + 27B + 27C</div>
-                    </button>
-                    <button onclick="selectConfig('zone', '27A')" id="cfg-zone-27A" class="cfg-zone-btn p-3 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-slate-700 text-left transition text-slate-300">
-                        <div class="font-bold text-xs sm:text-sm">Zone 27A</div>
-                        <div class="text-[11px] text-slate-400 mt-0.5">Tecate POE / Park</div>
-                    </button>
-                    <button onclick="selectConfig('zone', '27B')" id="cfg-zone-27B" class="cfg-zone-btn p-3 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-slate-700 text-left transition text-slate-300">
-                        <div class="font-bold text-xs sm:text-sm">Zone 27B</div>
-                        <div class="text-[11px] text-slate-400 mt-0.5">Ridge Rd / Brickyard</div>
-                    </button>
-                    <button onclick="selectConfig('zone', '27C')" id="cfg-zone-27C" class="cfg-zone-btn p-3 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-slate-700 text-left transition text-slate-300">
-                        <div class="font-bold text-xs sm:text-sm">Zone 27C</div>
-                        <div class="text-[11px] text-slate-400 mt-0.5">Bell Valley / Old 94</div>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Setting 3: Timer Toggle -->
-            <div class="space-y-2.5">
-                <label class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                    <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mono text-[11px]">3</span>
-                    Pacing & Clock Mode
-                </label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <button onclick="selectConfig('timed', true)" id="cfg-timed-true" class="cfg-timed-btn p-3.5 rounded-xl border text-left transition bg-sky-500/20 border-sky-500 text-white flex items-center justify-between">
-                        <div>
-                            <div class="font-bold text-sm">⏱️ Timed Blitz (20s / Question)</div>
-                            <div class="text-xs text-sky-200/80 mt-0.5">Simulates live radio dispatch pressure</div>
-                        </div>
-                    </button>
-                    <button onclick="selectConfig('timed', false)" id="cfg-timed-false" class="cfg-timed-btn p-3.5 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-slate-700 text-left transition text-slate-300 flex items-center justify-between">
-                        <div>
-                            <div class="font-bold text-sm">🧭 Untimed Study Exam</div>
-                            <div class="text-xs text-slate-400 mt-0.5">Analyze routes & landmarks at your own pace</div>
-                        </div>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Launch Button -->
-            <div class="pt-2">
-                <button onclick="startExam()" class="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-base tracking-wide shadow-lg shadow-emerald-950/60 transition flex items-center justify-center gap-2">
-                    <span>LAUNCH POTRERO SECTOR BLITZ EXAM</span>
-                    <span>➔</span>
+                <button onclick="toggleLabels()" id="btn-toggle-labels" class="bg-slate-900/90 backdrop-blur border border-slate-700/80 hover:border-emerald-500/50 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-lg transition">
+                    <span id="label-eye-icon">👁️</span>
+                    <span id="label-toggle-text">Labels: ON</span>
                 </button>
             </div>
-        </section>
 
-        <!-- ==================== VIEW 2: ACTIVE EXAM & VISUAL MINI-MAP ==================== -->
-        <section id="view-exam" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-            
-            <!-- Left Column: Question Card & Multiple Choice Options (7 cols) -->
-            <div class="lg:col-span-7 bg-slate-900/95 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-2xl space-y-5">
+            <!-- Bottom-Left Map Controls -->
+            <div class="absolute bottom-3 left-3 z-10 flex items-center gap-2">
+                <div class="bg-slate-900/90 backdrop-blur border border-slate-700/80 rounded-xl p-1 flex items-center gap-1 shadow-lg">
+                    <button onclick="zoomMap(1.25)" title="Zoom In" class="w-8 h-8 rounded-lg hover:bg-slate-800 flex items-center justify-center text-slate-200 font-bold text-base">+</button>
+                    <button onclick="zoomMap(0.8)" title="Zoom Out" class="w-8 h-8 rounded-lg hover:bg-slate-800 flex items-center justify-center text-slate-200 font-bold text-base">−</button>
+                    <button onclick="resetView()" title="Reset View" class="px-2.5 h-8 rounded-lg hover:bg-slate-800 flex items-center justify-center text-xs font-semibold text-slate-300">Reset</button>
+                </div>
+                <div class="hidden sm:flex items-center gap-2 bg-slate-900/85 border border-slate-800 px-2.5 py-1.5 rounded-xl text-[11px] text-slate-400">
+                    <span class="text-emerald-400 font-bold">↑ N</span>
+                    <span>Drag to pan • Scroll to zoom • Tap node to inspect</span>
+                </div>
+            </div>
+
+            <!-- Vector Map Canvas -->
+            <svg id="potrero-svg" viewBox="0 0 1400 950" class="w-full h-full select-none">
+                <g id="map-viewport">
+                    <!-- Zone 27A Box -->
+                    <rect x="30" y="130" width="530" height="770" rx="18" fill="rgba(14, 165, 233, 0.04)" stroke="rgba(56, 189, 248, 0.25)" stroke-width="2" stroke-dasharray="8 6"/>
+                    <text x="65" y="185" fill="rgba(56, 189, 248, 0.25)" font-size="36" font-weight="800" class="mono">ZONE 27A</text>
+                    <text x="65" y="208" fill="rgba(56, 189, 248, 0.35)" font-size="12" font-weight="600">WEST SECTOR • TECATE POE / 5-CORNERS / EMERY RD</text>
+
+                    <!-- Zone 27C Box -->
+                    <rect x="580" y="30" width="790" height="445" rx="18" fill="rgba(16, 185, 129, 0.04)" stroke="rgba(52, 211, 153, 0.25)" stroke-width="2" stroke-dasharray="8 6"/>
+                    <text x="1150" y="80" fill="rgba(52, 211, 153, 0.25)" font-size="36" font-weight="800" class="mono">ZONE 27C</text>
+                    <text x="1105" y="102" fill="rgba(52, 211, 153, 0.35)" font-size="12" font-weight="600">NE SECTOR • BELL VALLEY / NORTHERN & SOUTHERN LOOPS</text>
+
+                    <!-- Zone 27B Box -->
+                    <rect x="580" y="495" width="790" height="425" rx="18" fill="rgba(245, 158, 11, 0.04)" stroke="rgba(251, 191, 36, 0.25)" stroke-width="2" stroke-dasharray="8 6"/>
+                    <text x="1150" y="880" fill="rgba(251, 191, 36, 0.25)" font-size="36" font-weight="800" class="mono">ZONE 27B</text>
+                    <text x="1105" y="902" fill="rgba(251, 191, 36, 0.35)" font-size="12" font-weight="600">SOUTH SECTOR • RIDGE RD / HUMPHRIES / BRICKYARD</text>
+
+                    <!-- Boundaries -->
+                    <text x="190" y="118" fill="#64748b" font-size="11" font-weight="700" class="mono">▲ PVR / BARRETT / POTRERO VALLEY RD / HWY 94</text>
+                    <text x="720" y="20" fill="#64748b" font-size="11" font-weight="700" class="mono">▲ ZONE 23 / TECATE DIVIDE / CAMPO</text>
+                    <text x="220" y="925" fill="#f87171" font-size="11" font-weight="700" class="mono">▼ INTERNATIONAL BORDER / BORDER RD / TECATE POE</text>
+
+                    <!-- Dynamic Layers -->
+                    <g id="roads-layer"></g>
+                    <g id="route-highlight-layer"></g>
+                    <g id="road-labels-layer"></g>
+                    <g id="nodes-layer"></g>
+                    <g id="node-labels-layer"></g>
+                </g>
+            </svg>
+        </div>
+
+        <!-- Mission / Challenge Panel -->
+        <aside id="mission-panel" class="w-full lg:w-[430px] bg-slate-900 border-t lg:border-t-0 lg:border-l border-slate-800 flex flex-col justify-between shrink-0 max-h-[52vh] lg:max-h-full overflow-y-auto z-20 shadow-2xl">
+            <div class="p-4 space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                    <div>
+                        <span id="mission-badge" class="mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">EXPLORE MODE</span>
+                        <h2 id="mission-title" class="text-base font-bold text-white mt-1">Sector Reconnaissance</h2>
+                    </div>
+                    <button id="btn-next-question" onclick="nextChallenge()" class="hidden px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow transition">
+                        Next ➔
+                    </button>
+                </div>
+
+                <div id="mission-body" class="space-y-3"></div>
+                <div id="feedback-box" class="hidden rounded-xl p-3 border text-xs font-medium transition-all"></div>
+            </div>
+
+            <!-- Legend & Reference Maps Footer -->
+            <div class="p-3 bg-slate-950/80 border-t border-slate-800/80 text-[11px] text-slate-400 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="font-semibold text-slate-300 uppercase tracking-wider text-[10px]">Map Symbology</span>
+                    <button onclick="toggleStudyMapsModal()" class="text-sky-400 hover:text-sky-300 underline font-semibold text-[11px]">
+                        🗺️ Reference Maps (A/B & B/C)
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-1.5">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-full bg-amber-400 border border-slate-900 inline-block"></span>
+                        <span>Trail Marker (1T–18T)</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-full bg-sky-400 border border-slate-900 inline-block"></span>
+                        <span>Major Intersection / Loop</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-full bg-emerald-400 border border-slate-900 inline-block"></span>
+                        <span>Tactical Landmark</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-4 h-1 bg-amber-500/80 inline-block rounded"></span>
+                        <span>Primary Artery / Hwy 94</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Reference Study Maps Modal -->
+    <div id="study-maps-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-white text-base">Reference Study Maps (Zones 27 A/B & 27 B/C)</h3>
+                    <p class="text-xs text-slate-400">Place your scanned images in <code class="text-emerald-400">assets/zone-27-ab.jpeg</code> and <code class="text-emerald-400">assets/zone-27-bc.jpeg</code> to view them here.</p>
+                </div>
+                <button onclick="toggleStudyMapsModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold">✕ Close</button>
+            </div>
+            <div class="p-4 overflow-y-auto space-y-6">
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-sky-400 mb-2">Zone 27 A/B Reference</h4>
+                    <img src="assets/zone-27-ab.jpeg" alt="Zone 27 A/B Map (Add assets/zone-27-ab.jpeg)" class="w-full rounded-xl border border-slate-800 bg-slate-950 p-2 text-xs text-slate-500">
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-2">Zone 27 B/C Reference</h4>
+                    <img src="assets/zone-27-bc.jpeg" alt="Zone 27 B/C Map (Add assets/zone-27-bc.jpeg)" class="w-full rounded-xl border border-slate-800 bg-slate-950 p-2 text-xs text-slate-500">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // UNIFIED SECTOR MAP NODES (ORIGINAL + NEW)
+        // ==========================================
+        const NODES = [
+            // ZONE 27A (WEST)
+            { id: 'tecate_poe', name: 'Tecate POE', zone: '27A', type: 'landmark', x: 465, y: 865, desc: 'Port of Entry at the southern border terminus of Airport Rd / Hwy 188.' },
+            { id: 'airport_rd_s', name: 'Airport RD', zone: '27A', type: 'junction', x: 410, y: 790, desc: 'The yellow road branching off near the pink Emery RD leading north from Tecate POE.' },
+            { id: 'customs_hp', name: "Custom's High Point", zone: '27A', type: 'landmark', x: 355, y: 745, desc: 'Elevated observation ridge overlooking Airport Road and the border approach.' },
+            { id: 'benson', name: 'Benson', zone: '27A', type: 'landmark', x: 315, y: 720, desc: 'Landmark checkpoint west of Airport Rd between 2T and Custom's High Point.' },
+            { id: '1t', name: '1T', zone: '27A', type: 'marker', x: 365, y: 845, desc: 'Trail marker 1T near the western border corridor.' },
+            { id: '2t', name: '2T', zone: '27A', type: 'marker', x: 315, y: 795, desc: 'Trail marker 2T along the western wash / Evergreen line.' },
+            { id: 'evergreen', name: 'Evergreen', zone: '27A', type: 'landmark', x: 265, y: 785, desc: 'Western sector draw near 2T and 3T.' },
+            { id: '3t', name: '3T', zone: '27A', type: 'marker', x: 280, y: 715, desc: 'Trail marker 3T on the western ridge line.' },
+            { id: '4t', name: '4T', zone: '27A', type: 'marker', x: 265, y: 650, desc: 'Trail marker 4T south of 5T and Merry's Ranch.' },
+            { id: '5_corners', name: '5-Corners', zone: '27A', type: 'junction', x: 375, y: 615, desc: 'Major 5-way road junction in central Zone 27A connecting Airport Rd, JB Road, and Center Park.' },
+            { id: 'emery_rd', name: 'Emery RD', zone: '27A', type: 'junction', x: 195, y: 675, desc: 'The pink road passing Samural Curves and Tecate Flats in western Zone 27A.' },
+            { id: 'samural_curves', name: 'Samural Curves / Tecate Flats', zone: '27A', type: 'landmark', x: 145, y: 735, desc: 'Key terrain corridor along pink Emery RD in southwestern Zone 27A.' },
+            { id: 'merrys_ranch', name: "Merry's Ranch", zone: '27A', type: 'landmark', x: 285, y: 565, desc: 'Key ranch complex north of 5T and west of 5-Corners.' },
+            { id: '5t', name: '5T', zone: '27A', type: 'marker', x: 255, y: 585, desc: 'Trail marker 5T adjacent to Merry's Ranch.' },
+            { id: '6t', name: '6T', zone: '27A', type: 'marker', x: 235, y: 495, desc: 'Trail marker 6T north of Merry's Ranch along the western corridor.' },
+            { id: 'crawford_pond', name: 'Crawford Pond', zone: '27A', type: 'landmark', x: 185, y: 405, desc: 'Water reservoir in northern Zone 27A near Four Corners North.' },
+            { id: 'blue_gate', name: 'Blue Gate', zone: '27A', type: 'landmark', x: 110, y: 295, desc: 'Northwestern access gate in Zone 27A toward Barrett / PVR.' },
+            { id: 'hammers_gate', name: "Hammer's Gate", zone: '27A', type: 'landmark', x: 225, y: 175, desc: 'The landmark near the top edge of Zone 27 A/B.' },
+            { id: 'hwy_94_west', name: 'HWY 94 (Potrero)', zone: '27A', type: 'junction', x: 350, y: 215, desc: 'The green highway crossing the upper part of the map near Potrero Fire Station & Cafe.' },
+            { id: 'potrero_fire', name: 'Potrero Fire Station', zone: '27A', type: 'landmark', x: 315, y: 245, desc: 'The landmark near the Post Office on HWY 94.' },
+            { id: 'potrero_cafe', name: 'Potrero Cafe', zone: '27A', type: 'landmark', x: 385, y: 255, desc: 'The landmark just below HWY 94 near the fire station.' },
+            { id: 'white_gate', name: 'White Gate', zone: '27A', type: 'landmark', x: 515, y: 315, desc: 'The red landmark on the right side of Zone 27 A/B.' },
+            { id: '7t', name: '7T', zone: '27A', type: 'marker', x: 270, y: 410, desc: 'Trail marker 7T along the northern connector road.' },
+            { id: 'eucalyptus_tree', name: 'Eucalyptus Tree', zone: '27A', type: 'landmark', x: 335, y: 385, desc: 'Distinctive landmark tree between 7T and Four Corners.' },
+            { id: 'four_corners', name: 'Four Corners', zone: '27A', type: 'junction', x: 395, y: 370, desc: 'Northern Zone 27A crossroads linking Eucalyptus Tree, The Shops, and Old Bolder Rd.' },
+            { id: 'the_shops', name: 'The Shops', zone: '27A', type: 'landmark', x: 405, y: 455, desc: 'Structures located between 5-Corners and Four Corners.' },
+            { id: 'center_park', name: 'Center Park', zone: '27A', type: 'landmark', x: 455, y: 575, desc: 'Central Potrero park area east of 5-Corners.' },
+            { id: 'old_bolder_rd', name: 'Old Bolder Road', zone: '27A', type: 'junction', x: 465, y: 275, desc: 'Northeastern route out of Zone 27A toward Cemetery and Harris Ranch Rd.' },
+            { id: 'cemetery_27a', name: 'Cemetery (27A)', zone: '27A', type: 'landmark', x: 525, y: 395, desc: 'Potrero Cemetery on the eastern boundary of Zone 27A near Harris Ranch Rd.' },
+            { id: 'harris_ranch_rd', name: 'Harris Ranch Road', zone: '27A', type: 'junction', x: 555, y: 475, desc: 'Boundary corridor linking Zone 27A, Zone 27B (Red House), and Zone 27C (Post House).' },
+
+            // ZONE 27B (SOUTH-CENTRAL)
+            { id: 'red_house', name: 'Red House', zone: '27B', type: 'landmark', x: 645, y: 540, desc: 'Prominent landmark at the northern entrance of Ridge Road near Harris Ranch Rd.' },
+            { id: 'mcalisters_ranch', name: "McAlister's Ranch", zone: '27B', type: 'landmark', x: 640, y: 635, desc: 'Ranch property along the western edge of Zone 27B near 13T.' },
+            { id: '13t_south', name: '13T (Ridge Rd)', zone: '27B', type: 'marker', x: 700, y: 615, desc: 'Trail marker 13T at the northern curve of Ridge Road.' },
+            { id: 'radio_tower_scope', name: 'Radio Tower Scope', zone: '27B', type: 'landmark', x: 745, y: 565, desc: 'The red landmark near Ridge RD.' },
+            { id: 'ridge_rd_mid', name: 'Ridge RD', zone: '27B', type: 'junction', x: 785, y: 645, desc: 'The pink road running below HWY 94 across Zone 27B.' },
+            { id: 'humphries_rd', name: 'Humphries RD', zone: '27B', type: 'junction', x: 745, y: 745, desc: 'The yellow road running across the lower part of Zone 27B.' },
+            { id: '12t', name: '12T', zone: '27B', type: 'marker', x: 845, y: 665, desc: 'Trail marker 12T on Ridge Road north of 12+1 / Gunsights.' },
+            { id: 'gunsights', name: '12+1 / 69 Post / Gunsights', zone: '27B', type: 'landmark', x: 855, y: 785, desc: 'Key southern border observation point (12+1 Slope / 69 Post / Gunsights).' },
+            { id: '11t', name: '11T', zone: '27B', type: 'marker', x: 960, y: 675, desc: 'Trail marker 11T at the junction leading south toward Brickyard.' },
+            { id: 'brickyard_hp', name: 'Brickyard Highpoint', zone: '27B', type: 'landmark', x: 965, y: 765, desc: 'The yellow landmark near the lower-right of Zone 27 A/B overlooking the Brickyard.' },
+            { id: 'brickyard', name: 'Brickyard', zone: '27B', type: 'landmark', x: 1015, y: 815, desc: 'Southern industrial/ruin site near Cutts Saddle and Little Cutts.' },
+            { id: 'cutts_saddle', name: 'Cutts Saddle', zone: '27B', type: 'landmark', x: 1085, y: 835, desc: 'Mountain saddle pass between Brickyard, Little Cutts, and 249 Monument.' },
+            { id: 'little_cutts', name: 'Little Cutts', zone: '27B', type: 'landmark', x: 1045, y: 865, desc: 'Southern ridge feature adjacent to Cutts Saddle.' },
+            { id: 'border_rd', name: 'Border RD', zone: '27B', type: 'junction', x: 940, y: 875, desc: 'The road running along the black international border line.' },
+            { id: 'monument_249', name: '249 Monument', zone: '27B', type: 'landmark', x: 1155, y: 865, desc: 'International Boundary Monument 249 in the far southeast of Zone 27B.' },
+            { id: '10t', name: '10T', zone: '27B', type: 'marker', x: 1055, y: 695, desc: 'Trail marker 10T along eastern Ridge Road.' },
+            { id: '9t', name: '9T', zone: '27B', type: 'marker', x: 1165, y: 715, desc: 'Trail marker 9T on eastern Ridge Road approaching 8T and Tire Shop.' },
+            { id: '8t_south', name: '8T', zone: '27B', type: 'marker', x: 1245, y: 705, desc: 'Trail marker 8T near the eastern terminus of Ridge Road.' },
+            { id: 'tire_shop', name: 'Tire Shop', zone: '27B', type: 'landmark', x: 1185, y: 555, desc: 'Landmark near Hwy 94 / 94-Milepost on the northeastern edge of Zone 27B.' },
+            { id: 'post_94', name: '94-Milepost / 94 Post', zone: '27B', type: 'landmark', x: 1285, y: 550, desc: 'Highway 94 milepost marker at the eastern boundary of Zone 27B.' },
+
+            // ZONE 27C (NORTH-EAST)
+            { id: 'post_house', name: 'Post House', zone: '27C', type: 'landmark', x: 645, y: 425, desc: 'Historic structure on the western side of Zone 27C near Harris Ranch Rd.' },
+            { id: 'dry_pond', name: "Dry Pond (Mauricio's)", zone: '27C', type: 'landmark', x: 695, y: 375, desc: 'The red landmark near the left-middle portion of the Zone 27 B/C map.' },
+            { id: 'potrero_creek', name: 'Potrero Creek', zone: '27C', type: 'landmark', x: 640, y: 335, desc: 'Creek drainage running along the western edge of Zone 27C.' },
+            { id: '13t_north', name: '13T (G-Road)', zone: '27C', type: 'marker', x: 755, y: 435, desc: 'Trail marker 13T at the southern start of G-Road in Zone 27C.' },
+            { id: '14t', name: '14T', zone: '27C', type: 'marker', x: 845, y: 395, desc: 'Trail marker 14T along G-Road south of Bob's Porch.' },
+            { id: '14_horseshoe', name: 'The Horseshoe (14)', zone: '27C', type: 'landmark', x: 885, y: 435, desc: 'The yellow horseshoe bend landmark near the lower middle of the B/C map.' },
+            { id: 'hog_bails', name: 'Hog Bails', zone: '27C', type: 'landmark', x: 965, y: 430, desc: 'Landmark south of 15T and 15/4 Turnout.' },
+            { id: 'bobs_porch', name: "Bob's Porch", zone: '27C', type: 'landmark', x: 830, y: 330, desc: 'Vantage point overlooking Bell Valley between 14T and 16T.' },
+            { id: '15t', name: '15T', zone: '27C', type: 'marker', x: 915, y: 365, desc: 'Trail marker 15T immediately west of 15/4 Turnout.' },
+            { id: 'turnout_15_4', name: '15/4 Turnout', zone: '27C', type: 'junction', x: 970, y: 350, desc: 'Critical junction where G-Road, The Grade, and the southern turnout converge.' },
+            { id: 'southern_loop_rd', name: 'Southern Loop RD', zone: '27C', type: 'junction', x: 855, y: 270, desc: 'The road labeled Southern Loop below Northern Loop in Zone 27C.' },
+            { id: 'northern_loop_rd', name: 'Northern Loop RD', zone: '27C', type: 'junction', x: 855, y: 155, desc: 'The road labeled Northern Loop in the central loop area.' },
+            { id: '16t', name: '16T', zone: '27C', type: 'marker', x: 945, y: 295, desc: 'Trail marker 16T north of 15/4 Turnout along G-Road.' },
+            { id: 'g_rock', name: 'G-Rock', zone: '27C', type: 'landmark', x: 905, y: 245, desc: 'Prominent rock formation along green G-Road in central Bell Valley.' },
+            { id: 'the_grade', name: 'The Grade', zone: '27C', type: 'junction', x: 1025, y: 300, desc: 'Steep road climb ascending northeast from 15/4 Turnout toward Earth Dam and 17T.' },
+            { id: 'bell_valley', name: 'Bell Valley', zone: '27C', type: 'landmark', x: 845, y: 205, desc: 'Central basin of Zone 27C surrounded by Old 94, G-Rock, and Bell Valley Overlook.' },
+            { id: 'bell_valley_overlook', name: 'Bell Valley Overlook', zone: '27C', type: 'landmark', x: 755, y: 315, desc: 'Scenic ridge overlook gazing down into Bell Valley.' },
+            { id: 'old_94', name: 'Old 94', zone: '27C', type: 'junction', x: 660, y: 220, desc: 'Historic Highway 94 alignment running along the northern ridge of Zone 27C.' },
+            { id: 'ricks_notch', name: "Rick's Notch", zone: '27C', type: 'landmark', x: 735, y: 175, desc: 'Ridge notch along Old 94 overlooking Bell Valley.' },
+            { id: 'magic_boulders', name: 'Magic Boulders', zone: '27C', type: 'landmark', x: 655, y: 120, desc: 'Boulder cluster along northwestern Old 94.' },
+            { id: 'waterfalls', name: 'Waterfalls', zone: '27C', type: 'landmark', x: 840, y: 95, desc: 'Seasonal waterfalls along northern Bell Valley Road.' },
+            { id: 'bee_hives', name: 'Bee Hives', zone: '27C', type: 'landmark', x: 910, y: 90, desc: 'Apiary landmark along upper Bell Valley Road.' },
+            { id: 'bell_valley_rd', name: 'Bell Valley Road', zone: '27C', type: 'junction', x: 1020, y: 65, desc: 'Main northern loop road connecting Old 94 to National Guard Lot and 18T.' },
+            { id: 'nat_guard_lot', name: 'National Guard Lot', zone: '27C', type: 'landmark', x: 1125, y: 75, desc: 'Staging lot at the northeastern apex of Bell Valley Road near Bug Out.' },
+            { id: 'bug_out', name: 'Bug Out', zone: '27C', type: 'landmark', x: 1175, y: 95, desc: 'Northeastern corner landmark adjacent to National Guard Lot and 18T.' },
+            { id: '18t', name: '18T', zone: '27C', type: 'marker', x: 1165, y: 170, desc: 'Trail marker 18T on the eastern descent from Bug Out toward 17T.' },
+            { id: '17t', name: '17T', zone: '27C', type: 'marker', x: 1125, y: 235, desc: 'Trail marker 17T near Earth Dam and Foundation Shooting Range.' },
+            { id: 'earth_dam', name: 'Earth Dam', zone: '27C', type: 'landmark', x: 1075, y: 255, desc: 'Earthen dam structure along The Grade / Bell Valley Pond.' },
+            { id: 'shooting_range', name: 'Foundation Shooting Range', zone: '27C', type: 'landmark', x: 1165, y: 265, desc: 'Shooting range facility east of 17T and Earth Dam.' },
+            { id: 'bell_valley_village', name: 'Bell Valley (Camp) Village', zone: '27C', type: 'landmark', x: 1145, y: 365, desc: 'Camp/village settlement in southeastern Zone 27C.' },
+            { id: 'bell_valley_bridge', name: 'Bell Valley Bridge', zone: '27C', type: 'landmark', x: 1265, y: 420, desc: 'The pink landmark near the lower-right corner of Zone 27 B/C.' }
+        ];
+
+        const EDGES = [
+            // Zone 27A Network
+            { from: 'tecate_poe', to: 'airport_rd_s', road: 'Airport RD', type: 'primary' },
+            { from: 'tecate_poe', to: '1t', road: 'Border Trail', type: 'trail' },
+            { from: '1t', to: '2t', road: 'Western Wash', type: 'trail' },
+            { from: '2t', to: 'evergreen', road: 'Evergreen Rd', type: 'trail' },
+            { from: 'evergreen', to: 'samural_curves', road: 'Emery RD', type: 'primary' },
+            { from: 'samural_curves', to: 'emery_rd', road: 'Emery RD', type: 'primary' },
+            { from: 'emery_rd', to: 'merrys_ranch', road: 'Emery RD', type: 'primary' },
+            { from: '2t', to: '3t', road: 'Ridge Trail', type: 'trail' },
+            { from: '3t', to: '4t', road: 'Western Trail', type: 'trail' },
+            { from: '4t', to: '5t', road: 'Western Trail', type: 'trail' },
+            { from: '5t', to: 'merrys_ranch', road: 'Ranch Spur', type: 'secondary' },
+            { from: '5t', to: '6t', road: 'North Trail', type: 'trail' },
+            { from: '6t', to: 'crawford_pond', road: 'Crawford Trail', type: 'trail' },
+            { from: 'crawford_pond', to: 'blue_gate', road: 'Blue Gate Rd', type: 'secondary' },
+            { from: 'blue_gate', to: 'hammers_gate', road: 'North Ridge', type: 'secondary' },
+            { from: 'hammers_gate', to: 'hwy_94_west', road: 'HWY 94', type: 'primary' },
+            { from: 'hwy_94_west', to: 'potrero_fire', road: 'HWY 94', type: 'primary' },
+            { from: 'potrero_fire', to: 'potrero_cafe', road: 'HWY 94', type: 'primary' },
+            { from: 'potrero_cafe', to: 'old_bolder_rd', road: 'HWY 94', type: 'primary' },
+            { from: 'old_bolder_rd', to: 'white_gate', road: 'East Gate Spur', type: 'secondary' },
+            { from: 'crawford_pond', to: '7t', road: 'North Connector', type: 'secondary' },
+            { from: 'airport_rd_s', to: 'customs_hp', road: 'Airport RD', type: 'primary' },
+            { from: 'customs_hp', to: 'benson', road: 'Benson Spur', type: 'trail' },
+            { from: 'customs_hp', to: '5_corners', road: 'Airport RD', type: 'primary' },
+            { from: 'merrys_ranch', to: '5_corners', road: 'Merrys Rd', type: 'secondary' },
+            { from: '5_corners', to: 'center_park', road: 'Center Park Rd', type: 'secondary' },
+            { from: '5_corners', to: 'the_shops', road: 'North-South Connector', type: 'primary' },
+            { from: 'the_shops', to: 'four_corners', road: 'North-South Connector', type: 'primary' },
+            { from: '7t', to: 'eucalyptus_tree', road: 'Eucalyptus Rd', type: 'secondary' },
+            { from: 'eucalyptus_tree', to: 'four_corners', road: 'Eucalyptus Rd', type: 'secondary' },
+            { from: 'four_corners', to: 'old_bolder_rd', road: 'Old Bolder Rd', type: 'primary' },
+            { from: 'white_gate', to: 'cemetery_27a', road: 'Cemetery Rd', type: 'secondary' },
+            { from: 'center_park', to: 'harris_ranch_rd', road: 'Harris Ranch Rd', type: 'primary' },
+            { from: 'cemetery_27a', to: 'harris_ranch_rd', road: 'Harris Ranch Rd', type: 'primary' },
+
+            // Inter-Zone Connectors
+            { from: 'harris_ranch_rd', to: 'red_house', road: 'Harris Ranch Rd', type: 'primary' },
+            { from: 'harris_ranch_rd', to: 'post_house', road: 'Harris Ranch Rd', type: 'primary' },
+
+            // Zone 27B Network
+            { from: 'red_house', to: 'mcalisters_ranch', road: 'West Ridge Rd', type: 'secondary' },
+            { from: 'red_house', to: '13t_south', road: 'Ridge RD', type: 'primary' },
+            { from: 'red_house', to: 'radio_tower_scope', road: 'Tower Spur', type: 'secondary' },
+            { from: 'mcalisters_ranch', to: '13t_south', road: 'Connector', type: 'trail' },
+            { from: '13t_south', to: 'ridge_rd_mid', road: 'Ridge RD', type: 'primary' },
+            { from: '13t_south', to: 'humphries_rd', road: 'Humphries RD', type: 'primary' },
+            { from: 'humphries_rd', to: 'gunsights', road: 'Humphries RD', type: 'primary' },
+            { from: 'ridge_rd_mid', to: '12t', road: 'Ridge RD', type: 'primary' },
+            { from: '12t', to: 'gunsights', road: '12+1 Slope Rd', type: 'trail' },
+            { from: '12t', to: '11t', road: 'Ridge RD', type: 'primary' },
+            { from: '11t', to: 'brickyard_hp', road: 'Brickyard Rd', type: 'secondary' },
+            { from: 'brickyard_hp', to: 'brickyard', road: 'Brickyard Rd', type: 'secondary' },
+            { from: 'brickyard', to: 'cutts_saddle', road: 'Cutts Trail', type: 'trail' },
+            { from: 'cutts_saddle', to: 'little_cutts', road: 'Saddle Spur', type: 'trail' },
+            { from: 'little_cutts', to: 'border_rd', road: 'Border RD', type: 'primary' },
+            { from: 'cutts_saddle', to: 'monument_249', road: 'Border RD', type: 'primary' },
+            { from: '11t', to: '10t', road: 'Ridge RD', type: 'primary' },
+            { from: '10t', to: '9t', road: 'Ridge RD', type: 'primary' },
+            { from: '9t', to: '8t_south', road: 'Ridge RD', type: 'primary' },
+            { from: '8t_south', to: 'tire_shop', road: 'Tire Spur', type: 'secondary' },
+            { from: 'tire_shop', to: 'post_94', road: 'Hwy 94', type: 'primary' },
+
+            // Zone 27C Network
+            { from: 'post_house', to: 'potrero_creek', road: 'Creek Rd', type: 'secondary' },
+            { from: 'post_house', to: 'dry_pond', road: 'Dry Pond Spur', type: 'secondary' },
+            { from: 'post_house', to: '13t_north', road: 'G-Road', type: 'primary' },
+            { from: '13t_north', to: '14t', road: 'G-Road', type: 'primary' },
+            { from: '14t', to: '14_horseshoe', road: 'Horseshoe Bend', type: 'secondary' },
+            { from: '14_horseshoe', to: 'hog_bails', road: 'Hog Bails Rd', type: 'secondary' },
+            { from: '14t', to: 'bobs_porch', road: 'Porch Spur', type: 'secondary' },
+            { from: 'bobs_porch', to: '15t', road: 'Porch Trail', type: 'trail' },
+            { from: '15t', to: 'turnout_15_4', road: 'G-Road', type: 'primary' },
+            { from: 'turnout_15_4', to: '16t', road: 'G-Road', type: 'primary' },
+            { from: '16t', to: 'g_rock', road: 'G-Road', type: 'primary' },
+            { from: 'g_rock', to: 'southern_loop_rd', road: 'Southern Loop RD', type: 'primary' },
+            { from: 'southern_loop_rd', to: 'bell_valley', road: 'Southern Loop RD', type: 'primary' },
+            { from: 'bell_valley', to: 'northern_loop_rd', road: 'Northern Loop RD', type: 'primary' },
+            { from: 'northern_loop_rd', to: 'bell_valley_rd', road: 'Northern Loop RD', type: 'primary' },
+            { from: 'turnout_15_4', to: 'the_grade', road: 'The Grade', type: 'primary' },
+            { from: 'the_grade', to: 'earth_dam', road: 'The Grade', type: 'primary' },
+            { from: 'earth_dam', to: '17t', road: 'The Grade', type: 'primary' },
+            { from: '17t', to: 'shooting_range', road: 'Range Rd', type: 'secondary' },
+            { from: '17t', to: '18t', road: 'East Ridge Trail', type: 'trail' },
+            { from: '18t', to: 'bug_out', road: 'Bug Out Rd', type: 'secondary' },
+            { from: 'bug_out', to: 'nat_guard_lot', road: 'Bell Valley Rd', type: 'primary' },
+            { from: 'nat_guard_lot', to: 'bell_valley_rd', road: 'Bell Valley Rd', type: 'primary' },
+            { from: 'bell_valley_rd', to: 'bee_hives', road: 'Bell Valley Rd', type: 'primary' },
+            { from: 'bee_hives', to: 'waterfalls', road: 'Bell Valley Rd', type: 'primary' },
+            { from: 'waterfalls', to: 'magic_boulders', road: 'Bell Valley Rd', type: 'primary' },
+            { from: 'magic_boulders', to: 'old_94', road: 'Old 94 Alignment', type: 'primary' },
+            { from: 'old_94', to: 'ricks_notch', road: 'Old 94 Alignment', type: 'primary' },
+            { from: 'ricks_notch', to: 'bell_valley_overlook', road: 'Overlook Rd', type: 'secondary' },
+            { from: 'bell_valley_overlook', to: 'potrero_creek', road: 'Creek Trail', type: 'trail' },
+            { from: 'earth_dam', to: 'bell_valley_village', road: 'Village Rd', type: 'secondary' },
+            { from: 'bell_valley_village', to: 'bell_valley_bridge', road: 'Bridge Rd', type: 'secondary' }
+        ];
+
+        // ==========================================
+        // DRAG-AND-DROP MAP CHALLENGE ROUNDS
+        // ==========================================
+        const CHALLENGE_ROUNDS = [
+            {
+                zone: "Zone 27 A/B",
+                items: [
+                    ["Emery RD", "The pink road passing Samural Curves and Tecate Flats.", "ROAD"],
+                    ["Airport RD", "The yellow road branching off near the pink Emery RD.", "ROAD"],
+                    ["Humphries RD", "The yellow road running across the lower part of the map.", "ROAD"],
+                    ["HWY 94", "The green highway crossing the upper part of the map.", "ROAD"],
+                    ["Hammer's Gate", "The landmark near the top edge of Zone A/B.", "LANDMARK"],
+                    ["White Gate", "The red landmark on the right side of Zone A/B.", "LANDMARK"]
+                ]
+            },
+            {
+                zone: "Zone 27 B/C",
+                items: [
+                    ["Ridge RD", "The pink road running below HWY 94.", "ROAD"],
+                    ["Northern Loop RD", "The road labeled Northern Loop in the central loop area.", "ROAD"],
+                    ["Southern Loop RD", "The road labeled Southern Loop below Northern Loop.", "ROAD"],
+                    ["G-Road", "The green road crossing the lower-middle area.", "ROAD"],
+                    ["Border RD", "The road running along the black border line.", "ROAD"],
+                    ["Bell Valley Bridge", "The pink landmark near the lower-right corner.", "LANDMARK"]
+                ]
+            },
+            {
+                zone: "Mixed Review",
+                items: [
+                    ["Potrero Fire Station", "The landmark near the Post Office on HWY 94.", "LANDMARK"],
+                    ["Potrero Cafe", "The landmark just below HWY 94 near the fire station.", "LANDMARK"],
+                    ["Radio Tower Scope", "The red landmark near Ridge RD.", "LANDMARK"],
+                    ["Dry Pond (Mauricio's)", "The red landmark near the left-middle portion of the B/C map.", "LANDMARK"],
+                    ["The Horseshoe (14)", "The yellow landmark near the lower middle of the B/C map.", "LANDMARK"],
+                    ["Brickyard Highpoint", "The yellow landmark near the lower-right of the A/B map.", "LANDMARK"]
+                ]
+            }
+        ];
+
+        // Core App State
+        let currentMode = 'explore';
+        let activeZone = 'ALL';
+        let showLabels = true;
+        let selectedNodeId = null;
+        let score = 0;
+        let streak = 0;
+        let totalAttempts = 0;
+        let correctAnswers = 0;
+        let currentTargetNode = null;
+
+        // Challenge Mode State
+        let cRoundIndex = 0;
+        let cPlacements = {};
+        let cSelectedChip = null;
+        let cChecked = false;
+
+        // Viewport Zoom/Pan variables
+        let scale = 1;
+        let pointX = 0;
+        let pointY = 0;
+        let startX = 0;
+        let startY = 0;
+        let isPanning = false;
+
+        const viewport = document.getElementById('map-viewport');
+        const mapContainer = document.getElementById('map-container');
+
+        function initMap() {
+            renderEdges();
+            renderNodes();
+            setupPanZoom();
+            setGameMode('explore');
+        }
+
+        function renderEdges() {
+            const layer = document.getElementById('roads-layer');
+            layer.innerHTML = '';
+
+            EDGES.forEach(edge => {
+                const source = NODES.find(n => n.id === edge.from);
+                const target = NODES.find(n => n.id === edge.to);
+                if (!source || !target) return;
+
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', source.x);
+                line.setAttribute('y1', source.y);
+                line.setAttribute('x2', target.x);
+                line.setAttribute('y2', target.y);
                 
-                <!-- Progress Bar & Countdown Timer -->
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between text-xs">
-                        <div class="flex items-center gap-2">
-                            <span id="q-counter" class="mono font-bold text-amber-400">QUESTION 1 OF 10</span>
-                            <span id="q-category-badge" class="mono text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 uppercase">ROUTE NAV</span>
+                let strokeColor = 'rgba(148, 163, 184, 0.4)';
+                let strokeWidth = '3';
+                let dashArray = 'none';
+
+                if (edge.type === 'primary') {
+                    strokeColor = 'rgba(245, 158, 11, 0.65)';
+                    strokeWidth = '4';
+                } else if (edge.type === 'trail') {
+                    strokeColor = 'rgba(56, 189, 248, 0.5)';
+                    strokeWidth = '2';
+                    dashArray = '4 4';
+                }
+
+                line.setAttribute('stroke', strokeColor);
+                line.setAttribute('stroke-width', strokeWidth);
+                if (dashArray !== 'none') line.setAttribute('stroke-dasharray', dashArray);
+                layer.appendChild(line);
+            });
+        }
+
+        function renderNodes() {
+            const layer = document.getElementById('nodes-layer');
+            const labelLayer = document.getElementById('node-labels-layer');
+            layer.innerHTML = '';
+            labelLayer.innerHTML = '';
+
+            NODES.forEach(node => {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', 'node-group cursor-pointer');
+                g.setAttribute('data-id', node.id);
+                g.onclick = () => handleNodeClick(node.id);
+
+                let fill = '#34d399'; // Landmark
+                if (node.type === 'marker') fill = '#fbbf24'; // Marker
+                if (node.type === 'junction') fill = '#38bdf8'; // Junction
+
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', node.x);
+                circle.setAttribute('cy', node.y);
+                circle.setAttribute('r', node.type === 'marker' ? '7' : '9');
+                circle.setAttribute('fill', fill);
+                circle.setAttribute('stroke', '#0f172a');
+                circle.setAttribute('stroke-width', '2');
+                circle.setAttribute('id', `node-circle-${node.id}`);
+                g.appendChild(circle);
+                layer.appendChild(g);
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', node.x + 12);
+                text.setAttribute('y', node.y + 4);
+                text.setAttribute('fill', '#f1f5f9');
+                text.setAttribute('font-size', '11');
+                text.setAttribute('font-weight', '600');
+                text.setAttribute('class', `node-label node-label-${node.zone}`);
+                text.setAttribute('id', `node-label-${node.id}`);
+                text.textContent = node.name;
+                labelLayer.appendChild(text);
+            });
+        }
+
+        function setupPanZoom() {
+            const updateTransform = () => {
+                viewport.setAttribute('transform', `translate(${pointX}, ${pointY}) scale(${scale})`);
+            };
+
+            mapContainer.onmousedown = (e) => {
+                if (e.target.closest('.node-group')) return;
+                isPanning = true;
+                startX = e.clientX - pointX;
+                startY = e.clientY - pointY;
+            };
+
+            window.onmousemove = (e) => {
+                if (!isPanning) return;
+                pointX = e.clientX - startX;
+                pointY = e.clientY - startY;
+                updateTransform();
+            };
+
+            window.onmouseup = () => { isPanning = false; };
+
+            mapContainer.onwheel = (e) => {
+                e.preventDefault();
+                const xs = (e.clientX - pointX) / scale;
+                const ys = (e.clientY - pointY) / scale;
+                const delta = -e.deltaY;
+                (delta > 0) ? (scale *= 1.15) : (scale /= 1.15);
+                scale = Math.min(Math.max(0.5, scale), 4);
+                pointX = e.clientX - xs * scale;
+                pointY = e.clientY - ys * scale;
+                updateTransform();
+            };
+        }
+
+        function zoomMap(factor) {
+            scale *= factor;
+            scale = Math.min(Math.max(0.5, scale), 4);
+            viewport.setAttribute('transform', `translate(${pointX}, ${pointY}) scale(${scale})`);
+        }
+
+        function resetView() {
+            scale = 1;
+            pointX = 0;
+            pointY = 0;
+            viewport.setAttribute('transform', `translate(0, 0) scale(1)`);
+        }
+
+        function focusZone(zone) {
+            activeZone = zone;
+            document.querySelectorAll('.zone-filter-btn').forEach(btn => {
+                btn.className = 'zone-filter-btn px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:bg-slate-800 transition';
+            });
+            document.getElementById(`zone-btn-${zone}`).className = 'zone-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-700 text-white transition';
+
+            NODES.forEach(node => {
+                const circle = document.getElementById(`node-circle-${node.id}`);
+                const label = document.getElementById(`node-label-${node.id}`);
+                if (!circle || !label) return;
+
+                if (zone === 'ALL' || node.zone === zone) {
+                    circle.style.opacity = '1';
+                    label.style.opacity = showLabels ? '1' : '0';
+                } else {
+                    circle.style.opacity = '0.2';
+                    label.style.opacity = '0';
+                }
+            });
+        }
+
+        function toggleLabels() {
+            showLabels = !showLabels;
+            document.getElementById('label-toggle-text').textContent = showLabels ? 'Labels: ON' : 'Labels: OFF';
+            document.getElementById('label-eye-icon').textContent = showLabels ? '👁️' : '🙈';
+            
+            NODES.forEach(node => {
+                const label = document.getElementById(`node-label-${node.id}`);
+                if (label) {
+                    label.style.opacity = (showLabels && (activeZone === 'ALL' || node.zone === activeZone)) ? '1' : '0';
+                }
+            });
+        }
+
+        function toggleStudyMapsModal() {
+            const modal = document.getElementById('study-maps-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        function setGameMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(b => {
+                b.className = 'mode-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap text-slate-400 hover:text-white';
+            });
+            document.getElementById(`btn-mode-${mode}`).className = 'mode-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap bg-emerald-600 text-white shadow';
+
+            const badge = document.getElementById('mission-badge');
+            const title = document.getElementById('mission-title');
+            const nextBtn = document.getElementById('btn-next-question');
+            const feedback = document.getElementById('feedback-box');
+            feedback.classList.add('hidden');
+
+            if (mode === 'explore') {
+                badge.textContent = 'EXPLORE MODE';
+                title.textContent = 'Sector Reconnaissance';
+                nextBtn.classList.add('hidden');
+                renderExplorePanel();
+            } else if (mode === 'locator') {
+                badge.textContent = 'LOCATOR MODE';
+                title.textContent = 'Find Tactical Landmark';
+                nextBtn.classList.remove('hidden');
+                nextChallenge();
+            } else if (mode === 'challenge') {
+                badge.textContent = 'MAP CHALLENGE';
+                title.textContent = 'Drag & Drop Clue Rounds';
+                nextBtn.classList.add('hidden');
+                renderChallengeMode();
+            } else if (mode === 'route') {
+                badge.textContent = 'ROUTE NAV MODE';
+                title.textContent = 'Plot Sector Route';
+                nextBtn.classList.add('hidden');
+                renderRoutePanel();
+            } else if (mode === 'blitz') {
+                badge.textContent = 'SECTOR BLITZ';
+                title.textContent = 'Rapid ID Quiz';
+                nextBtn.classList.remove('hidden');
+                nextChallenge();
+            }
+        }
+
+        function handleNodeClick(id) {
+            selectedNodeId = id;
+            const node = NODES.find(n => n.id === id);
+
+            if (currentMode === 'explore' || currentMode === 'challenge') {
+                if (currentMode === 'explore') renderExplorePanel(node);
+            } else if (currentMode === 'locator') {
+                checkAnswer(node.id === currentTargetNode.id);
+            }
+        }
+
+        function renderExplorePanel(node = null) {
+            const body = document.getElementById('mission-body');
+            if (!node) {
+                body.innerHTML = `
+                    <div class="p-3 bg-slate-950/50 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-2">
+                        <p class="text-slate-200 font-semibold">🔍 Explore Mode Active</p>
+                        <p>Click any landmark, trail marker (1T–18T), or road junction on the map to inspect its zone coordinates and tactical notes.</p>
+                        <p class="text-[11px] text-emerald-400 pt-1">Includes all locations from Zone 27A, 27B, and 27C (Emery RD, Humphries RD, Northern/Southern Loops, Potrero Fire Station, etc.).</p>
+                    </div>
+                `;
+                return;
+            }
+
+            body.innerHTML = `
+                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">${node.zone}</span>
+                        <span class="mono text-[10px] text-slate-400">ID: ${node.id}</span>
+                    </div>
+                    <h3 class="text-base font-bold text-white">${node.name}</h3>
+                    <p class="text-xs text-slate-300 leading-relaxed">${node.desc}</p>
+                    <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 mono">
+                        <span>X: ${node.x}</span>
+                        <span>Y: ${node.y}</span>
+                        <span class="capitalize">${node.type}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ==========================================
+        // INTEGRATED DRAG-AND-DROP CHALLENGE LOGIC
+        // ==========================================
+        function renderChallengeMode() {
+            cPlacements = {};
+            cSelectedChip = null;
+            cChecked = false;
+            const round = CHALLENGE_ROUNDS[cRoundIndex];
+            const shuffledIndices = round.items.map((_, i) => i).sort(() => Math.random() - 0.5);
+
+            const body = document.getElementById('mission-body');
+            body.innerHTML = `
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-emerald-400">Round ${cRoundIndex + 1} of ${CHALLENGE_ROUNDS.length} • ${round.zone}</span>
+                        <span id="c-count" class="mono text-[11px] px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">0 / 6 placed</span>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div class="flex gap-1.5">
+                        ${CHALLENGE_ROUNDS.map((_, i) => `<span class="h-1.5 flex-1 rounded-full ${i <= cRoundIndex ? 'bg-emerald-500' : 'bg-slate-800'}"></span>`).join('')}
+                    </div>
+
+                    <!-- Name Bank -->
+                    <div class="space-y-1.5">
+                        <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400">① Name Bank (Drag or Tap)</div>
+                        <div id="c-bank" class="flex flex-wrap gap-1.5">
+                            ${shuffledIndices.map(idx => `
+                                <button type="button" draggable="true" data-idx="${idx}"
+                                    ondragstart="onChipDragStart(event, ${idx})"
+                                    onclick="onChipSelect(${idx})"
+                                    class="chip">
+                                    ${round.items[idx][0]}
+                                </button>
+                            `).join('')}
                         </div>
-                        <div id="q-timer-box" class="mono font-extrabold text-sm px-2.5 py-0.5 rounded-lg bg-slate-950 border border-slate-800 text-sky-400">
-                            ⏱️ 20s
+                    </div>
+
+                    <!-- Clues & Blanks -->
+                    <div class="space-y-2 pt-1">
+                        <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400">② Match to Clues</div>
+                        <div class="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+                            ${round.items.map((item, idx) => `
+                                <div class="p-2 rounded-lg bg-slate-900/70 border border-slate-800/80 space-y-1.5">
+                                    <div class="flex items-center justify-between text-[10px] font-bold text-slate-400">
+                                        <span>${idx + 1}. ${item[2]}</span>
+                                    </div>
+                                    <p class="text-xs text-slate-200 leading-snug">${item[1]}</p>
+                                    <div id="c-target-${idx}"
+                                        ondragover="onSlotDragOver(event, ${idx})"
+                                        ondragleave="onSlotDragLeave(${idx})"
+                                        ondrop="onSlotDrop(event, ${idx})"
+                                        onclick="onSlotClick(${idx})"
+                                        class="target-slot">
+                                        <span class="text-slate-500">Drop or tap name here…</span>
+                                        <span class="text-slate-500">＋</span>
+                                    </div>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
-                    <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-                        <div id="q-progress-bar" class="h-full bg-gradient-to-r from-amber-500 to-emerald-500 transition-all duration-300" style="width: 10%"></div>
-                    </div>
-                </div>
 
-                <!-- Question Prompt -->
-                <div class="bg-slate-950/90 border border-slate-800/90 rounded-xl p-4 sm:p-5 space-y-2">
-                    <div class="flex items-center gap-2">
-                        <span id="q-zone-pill" class="mono text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ZONE 27A</span>
-                        <span id="q-sub-label" class="text-xs text-slate-400">Tactical Dispatch Query</span>
-                    </div>
-                    <h2 id="q-text" class="text-base sm:text-lg font-bold text-white leading-snug">
-                        Loading tactical question...
-                    </h2>
-                </div>
-
-                <!-- 4 Answer Options -->
-                <div id="q-options-list" class="space-y-2.5">
-                    <!-- Populated via JS -->
-                </div>
-
-                <!-- Post-Answer Explanation & Next Button -->
-                <div id="q-feedback-panel" class="hidden rounded-xl p-4 border space-y-3">
-                    <div id="q-feedback-text" class="text-xs sm:text-sm leading-relaxed"></div>
-                    <div class="flex justify-end">
-                        <button id="btn-next-q" onclick="nextQuestion()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow transition flex items-center gap-1.5">
-                            <span>Next Question</span>
-                            <span>➔</span>
+                    <!-- Actions -->
+                    <div class="flex gap-2 pt-2">
+                        <button id="c-btn-check" onclick="checkChallengeRound()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow transition">
+                            Check Answers
+                        </button>
+                        <button onclick="renderChallengeMode()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold transition">
+                            Reset
                         </button>
                     </div>
                 </div>
-            </div>
+            `;
+        }
 
-            <!-- Right Column: Visual Verification Schematic Mini-Map (5 cols) -->
-            <div class="lg:col-span-5 bg-slate-900/95 border border-slate-800 rounded-2xl p-4 shadow-2xl space-y-3">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-                    <div>
-                        <span class="mono text-[10px] font-bold text-emerald-400 uppercase">Tactical Map Verification</span>
-                        <h3 class="text-sm font-bold text-white">Potrero Sector Schematic (North-Up)</h3>
-                    </div>
-                    <span id="map-lock-badge" class="mono text-[10px] px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                        LOCKED UNTIL ANSWER
-                    </span>
-                </div>
+        function onChipDragStart(e, idx) {
+            e.dataTransfer.setData('text/plain', String(idx));
+        }
 
-                <!-- Upright SVG Map of Zones 27A, 27B, 27C -->
-                <div class="relative rounded-xl overflow-hidden border border-slate-800 topo-grid aspect-[4/3]">
-                    <svg id="mini-map-svg" viewBox="0 0 1000 720" class="w-full h-full">
-                        <!-- Zone Boundaries -->
-                        <rect x="20" y="95" width="380" height="600" rx="14" fill="rgba(56, 189, 248, 0.04)" stroke="rgba(56, 189, 248, 0.3)" stroke-width="2" stroke-dasharray="6 4"/>
-                        <text x="38" y="130" fill="rgba(56, 189, 248, 0.45)" font-size="22" font-weight="800" class="mono">ZONE 27A</text>
-                        <text x="38" y="146" fill="rgba(56, 189, 248, 0.45)" font-size="10" font-weight="600">WEST • TECATE POE / PARK</text>
+        function onChipSelect(idx) {
+            if (cChecked) return;
+            cSelectedChip = idx;
+            document.querySelectorAll('#c-bank .chip').forEach(btn => {
+                btn.classList.toggle('selected', Number(btn.dataset.idx) === idx);
+            });
+        }
 
-                        <rect x="420" y="20" width="560" height="335" rx="14" fill="rgba(16, 185, 129, 0.04)" stroke="rgba(52, 211, 153, 0.3)" stroke-width="2" stroke-dasharray="6 4"/>
-                        <text x="835" y="54" fill="rgba(52, 211, 153, 0.45)" font-size="22" font-weight="800" class="mono">ZONE 27C</text>
-                        <text x="805" y="70" fill="rgba(52, 211, 153, 0.45)" font-size="10" font-weight="600">NE • BELL VALLEY / OLD 94</text>
+        function onSlotDragOver(e, targetIdx) {
+            if (cChecked) return;
+            e.preventDefault();
+            document.getElementById(`c-target-${targetIdx}`).classList.add('over');
+        }
 
-                        <rect x="420" y="375" width="560" height="320" rx="14" fill="rgba(245, 158, 11, 0.04)" stroke="rgba(251, 191, 36, 0.3)" stroke-width="2" stroke-dasharray="6 4"/>
-                        <text x="835" y="665" fill="rgba(251, 191, 36, 0.45)" font-size="22" font-weight="800" class="mono">ZONE 27B</text>
-                        <text x="795" y="681" fill="rgba(251, 191, 36, 0.45)" font-size="10" font-weight="600">SOUTH • RIDGE RD / BRICKYARD</text>
+        function onSlotDragLeave(targetIdx) {
+            document.getElementById(`c-target-${targetIdx}`).classList.remove('over');
+        }
 
-                        <!-- Map Layers -->
-                        <g id="svg-roads"></g>
-                        <g id="svg-highlight-path"></g>
-                        <g id="svg-nodes"></g>
-                        <g id="svg-labels"></g>
-                    </svg>
-                </div>
+        function onSlotDrop(e, targetIdx) {
+            e.preventDefault();
+            onSlotDragLeave(targetIdx);
+            if (cChecked) return;
+            const chipIdx = Number(e.dataTransfer.getData('text/plain'));
+            placeChallengeItem(targetIdx, chipIdx);
+        }
 
-                <!-- Map Legend & Active Highlight Readout -->
-                <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400 bg-slate-950/80 px-3 py-2 rounded-xl border border-slate-800">
-                    <div class="flex items-center gap-3">
-                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block"></span> Origin</span>
-                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span> Target / Dest</span>
-                        <span class="flex items-center gap-1"><span class="w-3.5 h-1 bg-amber-400 inline-block rounded"></span> Verified Route</span>
-                    </div>
-                    <span id="map-route-caption" class="mono text-[10px] text-slate-300">Answer to illuminate route</span>
-                </div>
-            </div>
-        </section>
+        function onSlotClick(targetIdx) {
+            if (cChecked) return;
+            if (cSelectedChip !== null) {
+                placeChallengeItem(targetIdx, cSelectedChip);
+            } else if (cPlacements[targetIdx] !== undefined) {
+                delete cPlacements[targetIdx];
+                refreshChallengeUI();
+            }
+        }
 
-        <!-- ==================== VIEW 3: POST-EXAM SCORECARD & MISSED-ROUTE REVIEW ==================== -->
-        <section id="view-results" class="hidden max-w-5xl w-full mx-auto space-y-6">
+        function placeChallengeItem(targetIdx, chipIdx) {
+            for (const key in cPlacements) {
+                if (cPlacements[key] === chipIdx) delete cPlacements[key];
+            }
+            cPlacements[targetIdx] = chipIdx;
+            cSelectedChip = null;
+            refreshChallengeUI();
+        }
+
+        function refreshChallengeUI() {
+            const round = CHALLENGE_ROUNDS[cRoundIndex];
+            const placedCount = Object.keys(cPlacements).length;
+            document.getElementById('c-count').textContent = `${placedCount} / 6 placed`;
+
+            const usedIndices = Object.values(cPlacements);
+            document.querySelectorAll('#c-bank .chip').forEach(btn => {
+                const idx = Number(btn.dataset.idx);
+                const isUsed = usedIndices.includes(idx);
+                btn.classList.toggle('used', isUsed);
+                btn.classList.remove('selected');
+                btn.disabled = isUsed || cChecked;
+            });
+
+            round.items.forEach((_, idx) => {
+                const slot = document.getElementById(`c-target-${idx}`);
+                const placedIdx = cPlacements[idx];
+                slot.classList.remove('correct', 'incorrect');
+                if (placedIdx === undefined) {
+                    slot.innerHTML = `<span class="text-slate-500">Drop or tap name here…</span><span class="text-slate-500">＋</span>`;
+                } else {
+                    slot.innerHTML = `<strong class="text-slate-100">${round.items[placedIdx][0]}</strong><span class="text-slate-400 text-[11px]">↻</span>`;
+                    if (cChecked) {
+                        slot.classList.add(placedIdx === idx ? 'correct' : 'incorrect');
+                    }
+                }
+            });
+        }
+
+        function checkChallengeRound() {
+            const feedback = document.getElementById('feedback-box');
+            if (Object.keys(cPlacements).length < 6) {
+                feedback.classList.remove('hidden');
+                feedback.className = 'rounded-xl p-3 border text-xs font-medium bg-amber-500/10 border-amber-500/30 text-amber-300';
+                feedback.textContent = '⚠️ Please place all 6 names into the blanks before checking!';
+                return;
+            }
+
+            cChecked = true;
+            const round = CHALLENGE_ROUNDS[cRoundIndex];
+            let hits = 0;
+            round.items.forEach((_, idx) => {
+                totalAttempts++;
+                if (cPlacements[idx] === idx) {
+                    hits++;
+                    correctAnswers++;
+                    score += 50;
+                }
+            });
+
+            if (hits === 6) streak++;
+            else streak = 0;
+
+            updateStats();
+            refreshChallengeUI();
+
+            feedback.classList.remove('hidden');
+            if (hits === 6) {
+                feedback.className = 'rounded-xl p-3 border text-xs font-medium bg-emerald-500/10 border-emerald-500/30 text-emerald-300 space-y-2';
+                feedback.innerHTML = `
+                    <div>🎉 <strong>Perfect Round!</strong> All 6 answers matched accurately (+300 pts).</div>
+                    <button onclick="advanceChallengeRound()" class="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold shadow">
+                        ${cRoundIndex === CHALLENGE_ROUNDS.length - 1 ? 'Restart Rounds ↻' : 'Next Round →'}
+                    </button>
+                `;
+            } else {
+                feedback.className = 'rounded-xl p-3 border text-xs font-medium bg-rose-500/10 border-rose-500/30 text-rose-300 space-y-2';
+                feedback.innerHTML = `
+                    <div>You got <strong>${hits} / 6</strong> correct. Green slots are locked in; red slots need adjustment.</div>
+                    <button onclick="retryChallengeMistakes()" class="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold">
+                        Retry Mistakes
+                    </button>
+                `;
+            }
+        }
+
+        function retryChallengeMistakes() {
+            cChecked = false;
+            for (let i = 0; i < 6; i++) {
+                if (cPlacements[i] !== i) delete cPlacements[i];
+            }
+            document.getElementById('feedback-box').classList.add('hidden');
+            refreshChallengeUI();
+        }
+
+        function advanceChallengeRound() {
+            cRoundIndex = (cRoundIndex + 1) % CHALLENGE_ROUNDS.length;
+            document.getElementById('feedback-box').classList.add('hidden');
+            renderChallengeMode();
+        }
+
+        // ==========================================
+        // LOCATOR & BLITZ MODES
+        // ==========================================
+        function nextChallenge() {
+            const feedback = document.getElementById('feedback-box');
+            feedback.classList.add('hidden');
             
-            <!-- Top Scorecard Banner -->
-            <div class="bg-slate-900/95 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-800 pb-6">
-                    <div class="space-y-1.5">
-                        <span id="res-grade-badge" class="mono text-xs font-bold px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 uppercase">SECTOR CERTIFIED</span>
-                        <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Potrero Sector Blitz Scorecard</h2>
-                        <p id="res-summary-sub" class="text-sm text-slate-400">Completed tactical navigation & landmark assessment.</p>
+            const available = activeZone === 'ALL' ? NODES : NODES.filter(n => n.zone === activeZone);
+            currentTargetNode = available[Math.floor(Math.random() * available.length)];
+
+            const body = document.getElementById('mission-body');
+
+            if (currentMode === 'locator') {
+                body.innerHTML = `
+                    <div class="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+                        <div class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Target Landmark / Road</div>
+                        <div class="text-base font-bold text-emerald-400">${currentTargetNode.name}</div>
+                        <p class="text-xs text-slate-300">${currentTargetNode.desc}</p>
+                        <div class="pt-2 text-[11px] text-amber-400">👉 Tap the matching node on the map to respond.</div>
                     </div>
-                    <div class="flex items-center gap-5 bg-slate-950 px-6 py-4 rounded-2xl border border-slate-800">
-                        <div class="text-center">
-                            <div class="text-[11px] text-slate-400 uppercase font-semibold">Final Score</div>
-                            <div id="res-percent" class="mono text-3xl sm:text-4xl font-black text-emerald-400">90%</div>
-                        </div>
-                        <div class="h-10 w-px bg-slate-800"></div>
-                        <div class="text-center">
-                            <div class="text-[11px] text-slate-400 uppercase font-semibold">Avg Time</div>
-                            <div id="res-avg-time" class="mono text-xl sm:text-2xl font-bold text-sky-400">6.4s</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Zone Accuracy Breakdown -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6">
-                    <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-4">
-                        <div class="flex items-center justify-between text-xs font-bold text-sky-400 mono">
-                            <span>ZONE 27A (WEST)</span>
-                            <span id="res-27a-acc">100%</span>
-                        </div>
-                        <div class="text-xs text-slate-400 mt-1" id="res-27a-detail">0 / 0 correct</div>
-                        <div class="w-full h-1.5 bg-slate-900 rounded-full mt-2 overflow-hidden">
-                            <div id="res-27a-bar" class="h-full bg-sky-400" style="width: 100%"></div>
-                        </div>
-                    </div>
-
-                    <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-4">
-                        <div class="flex items-center justify-between text-xs font-bold text-amber-400 mono">
-                            <span>ZONE 27B (SOUTH)</span>
-                            <span id="res-27b-acc">100%</span>
-                        </div>
-                        <div class="text-xs text-slate-400 mt-1" id="res-27b-detail">0 / 0 correct</div>
-                        <div class="w-full h-1.5 bg-slate-900 rounded-full mt-2 overflow-hidden">
-                            <div id="res-27b-bar" class="h-full bg-amber-400" style="width: 100%"></div>
-                        </div>
-                    </div>
-
-                    <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-4">
-                        <div class="flex items-center justify-between text-xs font-bold text-emerald-400 mono">
-                            <span>ZONE 27C (NE)</span>
-                            <span id="res-27c-acc">100%</span>
-                        </div>
-                        <div class="text-xs text-slate-400 mt-1" id="res-27c-detail">0 / 0 correct</div>
-                        <div class="w-full h-1.5 bg-slate-900 rounded-full mt-2 overflow-hidden">
-                            <div id="res-27c-bar" class="h-full bg-emerald-400" style="width: 100%"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex flex-wrap items-center gap-3 pt-6">
-                    <button id="btn-retake-missed" onclick="retakeMissedOnly()" class="hidden px-5 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs sm:text-sm shadow transition">
-                        🎯 Retake Missed Questions Only
-                    </button>
-                    <button onclick="startExam()" class="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow transition">
-                        🔄 New Exam (Same Settings)
-                    </button>
-                    <button onclick="returnToSetup()" class="px-5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs sm:text-sm border border-slate-700 transition">
-                        ⚙️ Change Exam Settings
-                    </button>
-                </div>
-            </div>
-
-            <!-- Missed Questions & Visual Route Review Section -->
-            <div id="missed-review-wrapper" class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-                <!-- List of Missed / All Reviewed Items (7 cols) -->
-                <div class="lg:col-span-7 bg-slate-900/95 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                        <div>
-                            <h3 class="text-base font-extrabold text-white">Tactical Route & Landmark Review</h3>
-                            <p class="text-xs text-slate-400">Tap any item below to highlight its exact route on the Potrero map.</p>
-                        </div>
-                        <span id="review-count-badge" class="mono text-xs px-2.5 py-1 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">0 Missed</span>
-                    </div>
-                    <div id="review-items-list" class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-                        <!-- Populated via JS -->
-                    </div>
-                </div>
-
-                <!-- Interactive Review Map (5 cols) -->
-                <div class="lg:col-span-5 bg-slate-900/95 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3 sticky top-20">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                        <span class="mono text-xs font-bold text-amber-400 uppercase">Route Inspector Map</span>
-                        <span id="review-map-zone" class="mono text-[11px] text-slate-400">ALL ZONES</span>
-                    </div>
-                    <div class="relative rounded-xl overflow-hidden border border-slate-800 topo-grid aspect-[4/3]">
-                        <svg id="review-map-svg" viewBox="0 0 1000 720" class="w-full h-full">
-                            <rect x="20" y="95" width="380" height="600" rx="14" fill="rgba(56, 189, 248, 0.04)" stroke="rgba(56, 189, 248, 0.3)" stroke-width="2" stroke-dasharray="6 4"/>
-                            <text x="38" y="130" fill="rgba(56, 189, 248, 0.45)" font-size="22" font-weight="800" class="mono">ZONE 27A</text>
-                            <rect x="420" y="20" width="560" height="335" rx="14" fill="rgba(16, 185, 129, 0.04)" stroke="rgba(52, 211, 153, 0.3)" stroke-width="2" stroke-dasharray="6 4"/>
-                            <text x="835" y="54" fill="rgba(52, 211, 153, 0.45)" font-size="22" font-weight="800" class="mono">ZONE 27C</text>
-                            <rect x="420" y="375" width="560" height="320" rx="14" fill="rgba(245, 158, 11, 0.04)" stroke="rgba(251, 191, 36, 0.3)" stroke-width="2" stroke-dasharray="6 4"/>
-                            <text x="835" y="665" fill="rgba(251, 191, 36, 0.45)" font-size="22" font-weight="800" class="mono">ZONE 27B</text>
-                            <g id="rev-svg-roads"></g>
-                            <g id="rev-svg-highlight"></g>
-                            <g id="rev-svg-nodes"></g>
-                            <g id="rev-svg-labels"></g>
-                        </svg>
-                    </div>
-                    <p id="review-map-caption" class="text-xs text-slate-300 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                        Select a question card on the left to inspect its route.
-                    </p>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <script>
-        /**
-         * POTRERO, CA TACTICAL MAP NODES & EDGES (Upright North-Up Orientation from image_271f25.jpg)
-         * ViewBox: 1000 x 720
-         * - Zone 27A: x [20..400], y [95..695]
-         * - Zone 27C: x [420..980], y [20..355]
-         * - Zone 27B: x [420..980], y [375..695]
-         */
-        const MAP_NODES = [
-            // ================= ZONE 27A (WEST) =================
-            { id: 'tecate_poe', name: 'Tecate POE', zone: '27A', x: 325, y: 665 },
-            { id: 'airport_rd', name: 'Airport Rd', zone: '27A', x: 285, y: 605 },
-            { id: 'dons_house', name: "Don's House", zone: '27A', x: 345, y: 575 },
-            { id: 'water_tank', name: 'Water Tank', zone: '27A', x: 295, y: 540 },
-            { id: 'cement_pillars', name: 'Cement Pillars', zone: '27A', x: 255, y: 515 },
-            { id: '1t', name: '1T', zone: '27A', x: 245, y: 645 },
-            { id: '2t', name: '2T', zone: '27A', x: 215, y: 600 },
-            { id: '3t', name: '3T', zone: '27A', x: 195, y: 545 },
-            { id: '4t', name: '4T', zone: '27A', x: 185, y: 495 },
-            { id: '5t', name: '5T', zone: '27A', x: 180, y: 440 },
-            { id: 'marrons_ranch', name: "Marron's / Murphy's Ranch", zone: '27A', x: 135, y: 425 },
-            { id: '6t', name: '6T', zone: '27A', x: 165, y: 375 },
-            { id: '3_corners', name: '3-Corners', zone: '27A', x: 255, y: 455 },
-            { id: 'potrero_park', name: 'Potrero Park', zone: '27A', x: 325, y: 440 },
-            { id: 'white_house', name: 'White House', zone: '27A', x: 275, y: 390 },
-            { id: 'the_shop', name: 'The Shop', zone: '27A', x: 280, y: 345 },
-            { id: 'four_corners', name: 'Four Corners', zone: '27A', x: 265, y: 285 },
-            { id: '7t', name: '7T', zone: '27A', x: 185, y: 305 },
-            { id: 'eucalyptus_tree', name: 'Eucalyptus Tree', zone: '27A', x: 225, y: 270 },
-            { id: '8t_27a', name: '8T (North 27A)', zone: '27A', x: 175, y: 205 },
-            { id: 'brown_valley_rd', name: 'Brown Valley Rd', zone: '27A', x: 85, y: 185 },
-            { id: 'ridge_rd_north', name: 'Ridge Rd (North)', zone: '27A', x: 125, y: 245 },
-            { id: 'camphor_park', name: 'Camphor Park', zone: '27A', x: 325, y: 275 },
-            { id: 'old_baker_rd', name: 'Old Baker Rd', zone: '27A', x: 335, y: 215 },
-            { id: 'cemetery_27a', name: 'Cemetery (27A)', zone: '27A', x: 375, y: 300 },
-            { id: 'harris_ranch_rd', name: 'Harris Ranch Rd', zone: '27A', x: 410, y: 365 },
-
-            // ================= ZONE 27B (SOUTH-EAST) =================
-            { id: 'red_house', name: 'Red House', zone: '27B', x: 470, y: 415 },
-            { id: '13t_27b', name: '13T (Ridge Rd)', zone: '27B', x: 515, y: 470 },
-            { id: 'ridge_road', name: 'Ridge Road', zone: '27B', x: 580, y: 500 },
-            { id: '12t', name: '12T', zone: '27B', x: 635, y: 505 },
-            { id: '12_1_slope', name: '12+1 Slope', zone: '27B', x: 640, y: 595 },
-            { id: '11_tear_canyons', name: '11 Tear Canyons Rd', zone: '27B', x: 685, y: 455 },
-            { id: '11t', name: '11T', zone: '27B', x: 720, y: 515 },
-            { id: '9_dead', name: '9-Dead', zone: '27B', x: 750, y: 465 },
-            { id: 'brickyard_hp', name: 'Brickyard High Point', zone: '27B', x: 725, y: 580 },
-            { id: 'brickyard', name: 'Brickyard', zone: '27B', x: 765, y: 615 },
-            { id: 'little_cutie', name: 'Little Cutie', zone: '27B', x: 790, y: 655 },
-            { id: 'cats_cradle', name: "Cat's Cradle", zone: '27B', x: 825, y: 625 },
-            { id: 'monument_297', name: '297 Monument', zone: '27B', x: 880, y: 650 },
-            { id: 'the_cemetery_27b', name: 'The Cemetery (27B)', zone: '27B', x: 935, y: 655 },
-            { id: '10t', name: '10T', zone: '27B', x: 790, y: 525 },
-            { id: '9t', name: '9T', zone: '27B', x: 865, y: 540 },
-            { id: '8t_27b', name: '8T (Ridge Rd)', zone: '27B', x: 925, y: 530 },
-            { id: 'tire_shop', name: 'Tire Shop', zone: '27B', x: 865, y: 420 },
-            { id: 'palliat_slides', name: '9 Palliat Slides', zone: '27B', x: 915, y: 410 },
-            { id: 'mph_45', name: '45 MPH / Hwy 94', zone: '27B', x: 955, y: 410 },
-
-            // ================= ZONE 27C (NORTH-EAST) =================
-            { id: 'potrero_creek', name: 'Potrero Creek', zone: '27C', x: 465, y: 310 },
-            { id: 'buzzards_roost', name: 'Buzzards Roost', zone: '27C', x: 465, y: 245 },
-            { id: 'white_fence', name: 'White Fence / Junk Piles', zone: '27C', x: 515, y: 235 },
-            { id: 'old_94', name: 'Old 94', zone: '27C', x: 475, y: 175 },
-            { id: 'magic_banana', name: 'Magic Banana', zone: '27C', x: 465, y: 105 },
-            { id: 'ricks_notch', name: "Rick's Notch", zone: '27C', x: 530, y: 140 },
-            { id: 'dirt_hills', name: 'Dirt Hills', zone: '27C', x: 565, y: 95 },
-            { id: 'the_narrows', name: 'The Narrows', zone: '27C', x: 605, y: 65 },
-            { id: 'waterfalls', name: 'Waterfalls', zone: '27C', x: 645, y: 80 },
-            { id: 'bee_hives', name: 'Bee Hives', zone: '27C', x: 695, y: 75 },
-            { id: 'bell_valley_rd', name: 'Bell Valley Rd', zone: '27C', x: 765, y: 55 },
-            { id: 'nat_guard_lot', name: 'National Guard Lot', zone: '27C', x: 845, y: 60 },
-            { id: 'bug_out', name: 'Bug Out', zone: '27C', x: 895, y: 80 },
-            { id: '18t', name: '18T', zone: '27C', x: 885, y: 135 },
-            { id: '17t', name: '17T', zone: '27C', x: 845, y: 185 },
-            { id: 'shooting_range', name: 'Mountain Shooting Range', zone: '27C', x: 890, y: 205 },
-            { id: 'bell_valley_village', name: 'Bell Valley (Camp) Village', zone: '27C', x: 880, y: 275 },
-            { id: 'bell_valley', name: 'Bell Valley', zone: '27C', x: 625, y: 165 },
-            { id: 'bell_valley_overlook', name: 'Bell Valley Overlook', zone: '27C', x: 565, y: 235 },
-            { id: 'bobs_porch', name: "Bob's Porch", zone: '27C', x: 625, y: 250 },
-            { id: 'g_road', name: 'G-Road', zone: '27C', x: 675, y: 195 },
-            { id: '16t', name: '16T', zone: '27C', x: 715, y: 225 },
-            { id: 'the_grade', name: 'The Grade', zone: '27C', x: 775, y: 225 },
-            { id: 'turnout_15_4', name: '15/4 Turnout', zone: '27C', x: 735, y: 265 },
-            { id: '15t', name: '15T', zone: '27C', x: 690, y: 275 },
-            { id: '14t', name: '14T', zone: '27C', x: 635, y: 295 },
-            { id: '14_horseshoe', name: '14 Horseshoe', zone: '27C', x: 670, y: 325 },
-            { id: 'hang_balls', name: 'Hang Balls', zone: '27C', x: 730, y: 320 },
-            { id: '12_turnout', name: '12 Turnout', zone: '27C', x: 795, y: 325 },
-            { id: 'sporting_field', name: 'Sporting Field', zone: '27C', x: 835, y: 315 },
-            { id: '13t_27c', name: '13T (G-Road)', zone: '27C', x: 560, y: 325 },
-            { id: '13_turnout', name: '13 Turnout', zone: '27C', x: 615, y: 340 }
-        ];
-
-        const MAP_EDGES = [
-            // 27A
-            ['tecate_poe', 'airport_rd'], ['tecate_poe', '1t'], ['1t', '2t'], ['2t', '3t'], ['3t', '4t'],
-            ['4t', '5t'], ['5t', 'marrons_ranch'], ['5t', '6t'], ['6t', '7t'], ['7t', '8t_27a'],
-            ['8t_27a', 'brown_valley_rd'], ['8t_27a', 'ridge_rd_north'], ['7t', 'eucalyptus_tree'],
-            ['eucalyptus_tree', 'four_corners'], ['airport_rd', 'dons_house'], ['airport_rd', 'water_tank'],
-            ['water_tank', 'cement_pillars'], ['cement_pillars', '3_corners'], ['3_corners', 'potrero_park'],
-            ['3_corners', 'white_house'], ['white_house', 'the_shop'], ['the_shop', 'four_corners'],
-            ['four_corners', 'camphor_park'], ['camphor_park', 'old_baker_rd'], ['camphor_park', 'cemetery_27a'],
-            ['potrero_park', 'harris_ranch_rd'], ['cemetery_27a', 'harris_ranch_rd'],
-            // Inter-Zone
-            ['harris_ranch_rd', 'red_house'], ['harris_ranch_rd', 'potrero_creek'],
-            // 27B
-            ['red_house', '13t_27b'], ['13t_27b', 'ridge_road'], ['ridge_road', '12t'], ['12t', '12_1_slope'],
-            ['12t', '11t'], ['11t', '11_tear_canyons'], ['11t', '9_dead'], ['11t', 'brickyard_hp'],
-            ['brickyard_hp', 'brickyard'], ['brickyard', 'little_cutie'], ['little_cutie', 'cats_cradle'],
-            ['cats_cradle', 'monument_297'], ['monument_297', 'the_cemetery_27b'], ['11t', '10t'],
-            ['10t', '9t'], ['9t', '8t_27b'], ['9t', 'tire_shop'], ['tire_shop', 'palliat_slides'],
-            ['palliat_slides', 'mph_45'],
-            // 27C
-            ['potrero_creek', 'buzzards_roost'], ['buzzards_roost', 'white_fence'], ['buzzards_roost', 'old_94'],
-            ['old_94', 'magic_banana'], ['old_94', 'ricks_notch'], ['ricks_notch', 'dirt_hills'],
-            ['dirt_hills', 'the_narrows'], ['the_narrows', 'waterfalls'], ['waterfalls', 'bee_hives'],
-            ['bee_hives', 'bell_valley_rd'], ['bell_valley_rd', 'nat_guard_lot'], ['nat_guard_lot', 'bug_out'],
-            ['bug_out', '18t'], ['18t', '17t'], ['17t', 'shooting_range'], ['17t', 'bell_valley_village'],
-            ['17t', 'the_grade'], ['the_grade', 'turnout_15_4'], ['turnout_15_4', '16t'], ['16t', 'g_road'],
-            ['g_road', 'bell_valley'], ['ricks_notch', 'bell_valley'], ['turnout_15_4', '15t'],
-            ['15t', '14t'], ['14t', 'bobs_porch'], ['bobs_porch', 'bell_valley_overlook'],
-            ['14t', '14_horseshoe'], ['14_horseshoe', 'hang_balls'], ['hang_balls', '12_turnout'],
-            ['12_turnout', 'sporting_field'], ['14t', '13t_27c'], ['13t_27c', '13_turnout'],
-            ['potrero_creek', '13t_27c']
-        ];
-
-        const nodeById = {};
-        MAP_NODES.forEach(n => { nodeById[n.id] = n; });
-
-        /**
-         * 32 UNIQUE TACTICAL ROUTING & LANDMARK QUESTIONS (Grounded directly in image_271f25.jpg)
-         */
-        const QUESTION_BANK = [
-            // ================= ZONE 27A QUESTIONS (11) =================
-            {
-                id: 'q1', zone: '27A', category: 'TURN-BY-TURN ROUTE',
-                text: 'Starting at Tecate POE (Zone 27A), which sequence of roads and junctions leads directly north to Potrero Park?',
-                options: [
-                    'Airport Rd ➔ Water Tank ➔ Cement Pillars ➔ 3-Corners ➔ Potrero Park',
-                    '1T ➔ 2T ➔ 3T ➔ Brown Valley Rd ➔ Potrero Park',
-                    'Old Baker Rd ➔ Camphor Park ➔ Four Corners ➔ Potrero Park',
-                    'Harris Ranch Rd ➔ Red House ➔ 13T ➔ Potrero Park'
-                ],
-                correctIndex: 0,
-                routeNodes: ['tecate_poe', 'airport_rd', 'water_tank', 'cement_pillars', '3_corners', 'potrero_park'],
-                explanation: 'From Tecate POE, head north along Airport Rd past Don\'s House, Water Tank, and Cement Pillars to 3-Corners, then turn east into Potrero Park.'
-            },
-            {
-                id: 'q2', zone: '27A', category: 'TURN-BY-TURN ROUTE',
-                text: 'How do you navigate from 3-Corners in central Zone 27A north to Four Corners and Camphor Park?',
-                options: [
-                    'Head north past White House and The Shop to Four Corners, then east to Camphor Park',
-                    'Head south via Cement Pillars and Water Tank to Airport Rd',
-                    'Follow 1T through 5T directly into Old 94',
-                    'Take Harris Ranch Rd south to Ridge Road and 12T'
-                ],
-                correctIndex: 0,
-                routeNodes: ['3_corners', 'white_house', 'the_shop', 'four_corners', 'camphor_park'],
-                explanation: 'Going north from 3-Corners passes White House and The Shop to reach Four Corners, where turning east leads into Camphor Park and Old Baker Rd.'
-            },
-            {
-                id: 'q3', zone: '27A', category: 'NEXT WAYPOINT',
-                text: 'Traveling north along the western trail markers in Zone 27A (1T ➔ 2T ➔ 3T ➔ 4T ➔ 5T), which ranch sits immediately west of 5T?',
-                options: [
-                    "Marron's Ranch / Murphy's Ranch",
-                    "Don's House",
-                    'Buzzards Roost',
-                    'Red House'
-                ],
-                correctIndex: 0,
-                routeNodes: ['1t', '2t', '3t', '4t', '5t', 'marrons_ranch'],
-                explanation: 'Marron\'s Ranch / Murphy\'s Ranch sits immediately adjacent to marker 5T on the western trail corridor of Zone 27A.'
-            },
-            {
-                id: 'q4', zone: '27A', category: 'NEXT WAYPOINT',
-                text: 'If you are at marker 7T in northern Zone 27A and head east toward Four Corners, which landmark do you pass directly between them?',
-                options: [
-                    'Eucalyptus Tree',
-                    'Cement Pillars',
-                    '15/4 Turnout',
-                    'Brickyard High Point'
-                ],
-                correctIndex: 0,
-                routeNodes: ['7t', 'eucalyptus_tree', 'four_corners'],
-                explanation: 'Eucalyptus Tree sits directly on the east-west connector road linking 7T and Four Corners in Zone 27A.'
-            },
-            {
-                id: 'q5', zone: '27A', category: 'ZONE & SECTOR ID',
-                text: 'Which Zone and northern boundary roads connect to marker 8T at the northwest corner of the Potrero sector?',
-                options: [
-                    'Zone 27A • Brown Valley Rd & Ridge Rd (North)',
-                    'Zone 27B • Hwy 94 & 9 Palliat Slides',
-                    'Zone 27C • Bell Valley Rd & Bug Out',
-                    'Zone 27B • Cutts Saddle & 297 Monument'
-                ],
-                correctIndex: 0,
-                routeNodes: ['6t', '7t', '8t_27a', 'brown_valley_rd', 'ridge_rd_north'],
-                explanation: 'In northwest Zone 27A, following 6T and 7T north reaches 8T, which connects to Brown Valley Rd and Ridge Rd (North).'
-            },
-            {
-                id: 'q6', zone: '27A', category: 'TURN-BY-TURN ROUTE',
-                text: 'How do you exit Zone 27A eastward from Camphor Park to cross into Zone 27B or Zone 27C?',
-                options: [
-                    'Pass Cemetery (27A) onto Harris Ranch Rd, which links to Red House (27B) and Potrero Creek (27C)',
-                    'Head south through 3-Corners to Tecate POE',
-                    'Follow 2T west to Brown Valley Rd',
-                    'Take The Grade south to Little Cutie'
-                ],
-                correctIndex: 0,
-                routeNodes: ['camphor_park', 'cemetery_27a', 'harris_ranch_rd', 'red_house'],
-                explanation: 'Harris Ranch Rd runs along the eastern border of Zone 27A past Cemetery (27A) and Potrero Park, serving as the primary gateway to Red House (27B) and Potrero Creek (27C).'
-            },
-            {
-                id: 'q7', zone: '27A', category: 'ZONE & SECTOR ID',
-                text: 'Which Zone contains Don\'s House, Water Tank, and Cement Pillars along the Airport Rd corridor?',
-                options: [
-                    'Zone 27A (West / Tecate POE Sector)',
-                    'Zone 27B (South / Ridge Road Sector)',
-                    'Zone 27C (Northeast / Bell Valley Sector)',
-                    'Zone 23 (North of Bell Valley)'
-                ],
-                correctIndex: 0,
-                routeNodes: ['tecate_poe', 'airport_rd', 'dons_house', 'water_tank', 'cement_pillars'],
-                explanation: 'Don\'s House, Water Tank, and Cement Pillars are all located in southern Zone 27A flanking Airport Rd north of Tecate POE.'
-            },
-            {
-                id: 'q8', zone: '27A', category: 'NEXT WAYPOINT',
-                text: 'From Four Corners in Zone 27A, heading northeast past Camphor Park leads onto which named road?',
-                options: [
-                    'Old Baker Rd',
-                    '11 Tear Canyons Rd',
-                    'G-Road',
-                    'Marron Valley Rd'
-                ],
-                correctIndex: 0,
-                routeNodes: ['four_corners', 'camphor_park', 'old_baker_rd'],
-                explanation: 'Old Baker Rd extends northeast from Camphor Park and Four Corners toward the northern border of Zone 27A.'
-            },
-            {
-                id: 'q9', zone: '27A', category: 'NEXT WAYPOINT',
-                text: 'Heading south from Four Corners in Zone 27A toward 3-Corners, what is the immediate next landmark?',
-                options: [
-                    'The Shop',
-                    'Tire Shop',
-                    'Sporting Field',
-                    'Magic Banana'
-                ],
-                correctIndex: 0,
-                routeNodes: ['four_corners', 'the_shop', 'white_house', '3_corners'],
-                explanation: 'The Shop sits just south of Four Corners (not to be confused with Tire Shop on Hwy 94 in Zone 27B).'
-            },
-            {
-                id: 'q10', zone: '27A', category: 'TURN-BY-TURN ROUTE',
-                text: 'What is the shortest road route from Potrero Park to Four Corners inside Zone 27A?',
-                options: [
-                    'Potrero Park ➔ 3-Corners ➔ White House ➔ The Shop ➔ Four Corners',
-                    'Potrero Park ➔ Tecate POE ➔ 1T ➔ 7T ➔ Four Corners',
-                    'Potrero Park ➔ Red House ➔ 13T ➔ Four Corners',
-                    'Potrero Park ➔ Old 94 ➔ G-Road ➔ Four Corners'
-                ],
-                correctIndex: 0,
-                routeNodes: ['potrero_park', '3_corners', 'white_house', 'the_shop', 'four_corners'],
-                explanation: 'Travel west from Potrero Park to 3-Corners, then turn north past White House and The Shop directly into Four Corners.'
-            },
-
-            // ================= ZONE 27B QUESTIONS (11) =================
-            {
-                id: 'q11', zone: '27B', category: 'TURN-BY-TURN ROUTE',
-                text: 'Starting at Red House on the western edge of Zone 27B, how do you navigate east along Ridge Road to reach 12T and 12+1 Slope?',
-                options: [
-                    'Red House ➔ 13T (Ridge Rd) ➔ Ridge Road ➔ 12T ➔ south spur to 12+1 Slope',
-                    'Red House ➔ Old 94 ➔ Magic Banana ➔ 12+1 Slope',
-                    'Red House ➔ 8T ➔ 9T ➔ 10T ➔ 12+1 Slope',
-                    'Red House ➔ Potrero Park ➔ Cement Pillars ➔ 12+1 Slope'
-                ],
-                correctIndex: 0,
-                routeNodes: ['red_house', '13t_27b', 'ridge_road', '12t', '12_1_slope'],
-                explanation: 'From Red House, follow Ridge Road east past 13T to marker 12T, then take the southern spur down to 12+1 Slope.'
-            },
-            {
-                id: 'q12', zone: '27B', category: 'TURN-BY-TURN ROUTE',
-                text: 'From marker 8T at the eastern end of Ridge Road in Zone 27B, which marker sequence takes you west to 12T?',
-                options: [
-                    '8T ➔ 9T ➔ 10T ➔ 11T ➔ 12T',
-                    '8T ➔ 7T ➔ 6T ➔ 5T ➔ 12T',
-                    '8T ➔ 18T ➔ 17T ➔ 16T ➔ 12T',
-                    '8T ➔ Brickyard ➔ Little Cutie ➔ 12T'
-                ],
-                correctIndex: 0,
-                routeNodes: ['8t_27b', '9t', '10t', '11t', '12t'],
-                explanation: 'Along Ridge Road in Zone 27B, the trail markers count up from east to west: 8T ➔ 9T ➔ 10T ➔ 11T ➔ 12T ➔ 13T.'
-            },
-            {
-                id: 'q13', zone: '27B', category: 'TURN-BY-TURN ROUTE',
-                text: 'Starting at marker 11T on Ridge Road (Zone 27B), how do you reach Brickyard and 297 Monument?',
-                options: [
-                    '11T ➔ Brickyard High Point ➔ Brickyard ➔ Little Cutie ➔ Cat\'s Cradle ➔ 297 Monument',
-                    '11T ➔ 9-Dead ➔ Tire Shop ➔ 45 MPH ➔ 297 Monument',
-                    '11T ➔ 12T ➔ 13T ➔ Red House ➔ 297 Monument',
-                    '11T ➔ 15/4 Turnout ➔ The Grade ➔ 297 Monument'
-                ],
-                correctIndex: 0,
-                routeNodes: ['11t', 'brickyard_hp', 'brickyard', 'little_cutie', 'cats_cradle', 'monument_297'],
-                explanation: 'Turn south at 11T past Brickyard High Point into Brickyard, then follow the southern border trail through Little Cutie and Cat\'s Cradle to 297 Monument.'
-            },
-            {
-                id: 'q14', zone: '27B', category: 'NEXT WAYPOINT',
-                text: 'Which two landmarks sit immediately north of marker 11T in Zone 27B?',
-                options: [
-                    '11 Tear Canyons Rd and 9-Dead',
-                    'Waterfalls and Bee Hives',
-                    'White House and The Shop',
-                    '14 Horseshoe and Hang Balls'
-                ],
-                correctIndex: 0,
-                routeNodes: ['11t', '11_tear_canyons', '9_dead'],
-                explanation: '11 Tear Canyons Rd and 9-Dead are positioned directly north of marker 11T along the northern slopes of Zone 27B.'
-            },
-            {
-                id: 'q15', zone: '27B', category: 'TURN-BY-TURN ROUTE',
-                text: 'How do you get from marker 9T on Ridge Road (Zone 27B) to Hwy 94 / 45 MPH?',
-                options: [
-                    'Head northeast from 9T to Tire Shop, then east past 9 Palliat Slides to 45 MPH / Hwy 94',
-                    'Head south from 9T through Brickyard to The Cemetery',
-                    'Head west from 9T past 12T to Red House',
-                    'Head north from 9T through G-Road to Bell Valley'
-                ],
-                correctIndex: 0,
-                routeNodes: ['9t', 'tire_shop', 'palliat_slides', 'mph_45'],
-                explanation: 'A connector road runs northeast from 9T to Tire Shop on Highway 94, continuing east past 9 Palliat Slides to the 45 MPH sign.'
-            },
-            {
-                id: 'q16', zone: '27B', category: 'ZONE & SECTOR ID',
-                text: 'Which Zone contains Little Cutie, Cat\'s Cradle, 297 Monument, and The Cemetery along the southern border?',
-                options: [
-                    'Zone 27B (South-East Sector)',
-                    'Zone 27A (West Sector)',
-                    'Zone 27C (North-East Sector)',
-                    'Zone 27A / 27C Border'
-                ],
-                correctIndex: 0,
-                routeNodes: ['brickyard', 'little_cutie', 'cats_cradle', 'monument_297', 'the_cemetery_27b'],
-                explanation: 'Little Cutie, Cat\'s Cradle, 297 Monument, and The Cemetery form the southeastern border chain of Zone 27B.'
-            },
-            {
-                id: 'q17', zone: '27B', category: 'NEXT WAYPOINT',
-                text: 'Traveling east from 297 Monument along the southeastern corner of Zone 27B leads directly to which landmark?',
-                options: [
-                    'The Cemetery (27B)',
-                    'Tecate POE',
-                    'National Guard Lot',
-                    'Potrero Park'
-                ],
-                correctIndex: 0,
-                routeNodes: ['cats_cradle', 'monument_297', 'the_cemetery_27b'],
-                explanation: 'The Cemetery sits at the far southeastern corner of Zone 27B just east of 297 Monument.'
-            },
-            {
-                id: 'q18', zone: '27B', category: 'ZONE & SECTOR ID',
-                text: 'Which landmark sits at the northwestern entry of Ridge Road in Zone 27B right off Harris Ranch Rd?',
-                options: [
-                    'Red House',
-                    "Don's House",
-                    'White House',
-                    "Bob's Porch"
-                ],
-                correctIndex: 0,
-                routeNodes: ['harris_ranch_rd', 'red_house', '13t_27b'],
-                explanation: 'Red House marks the western entrance to Ridge Road and 13T in Zone 27B immediately east of Harris Ranch Rd.'
-            },
-            {
-                id: 'q19', zone: '27B', category: 'NEXT WAYPOINT',
-                text: 'Which marker sits immediately west of 10T and east of 12T on Ridge Road in Zone 27B?',
-                options: [
-                    '11T',
-                    '13T',
-                    '9T',
-                    '15T'
-                ],
-                correctIndex: 0,
-                routeNodes: ['12t', '11t', '10t'],
-                explanation: 'Marker 11T sits centrally on Ridge Road between 12T (to the west) and 10T (to the east).'
-            },
-            {
-                id: 'q20', zone: '27B', category: 'TURN-BY-TURN ROUTE',
-                text: 'What is the direct path from Brickyard High Point to Cat\'s Cradle in southern Zone 27B?',
-                options: [
-                    'Brickyard High Point ➔ Brickyard ➔ Little Cutie ➔ Cat\'s Cradle',
-                    'Brickyard High Point ➔ 11T ➔ 10T ➔ 9T ➔ Cat\'s Cradle',
-                    'Brickyard High Point ➔ 12+1 Slope ➔ 12T ➔ Cat\'s Cradle',
-                    'Brickyard High Point ➔ Tire Shop ➔ 45 MPH ➔ Cat\'s Cradle'
-                ],
-                correctIndex: 0,
-                routeNodes: ['brickyard_hp', 'brickyard', 'little_cutie', 'cats_cradle'],
-                explanation: 'Descend south from Brickyard High Point through Brickyard, then follow the ridge east through Little Cutie to Cat\'s Cradle.'
-            },
-
-            // ================= ZONE 27C QUESTIONS (12) =================
-            {
-                id: 'q21', zone: '27C', category: 'TURN-BY-TURN ROUTE',
-                text: 'Starting at Old 94 in Zone 27C, how do you navigate via G-Road and The Grade to reach 15/4 Turnout and 17T?',
-                options: [
-                    'Old 94 ➔ Rick\'s Notch ➔ Bell Valley ➔ G-Road ➔ 16T ➔ 15/4 Turnout ➔ The Grade ➔ 17T',
-                    'Old 94 ➔ Magic Banana ➔ Potrero Park ➔ 17T',
-                    'Old 94 ➔ Red House ➔ Ridge Road ➔ 11T ➔ 17T',
-                    'Old 94 ➔ 13 Turnout ➔ Hang Balls ➔ 14 Horseshoe ➔ 17T'
-                ],
-                correctIndex: 0,
-                routeNodes: ['old_94', 'ricks_notch', 'bell_valley', 'g_road', '16t', 'turnout_15_4', 'the_grade', '17t'],
-                explanation: 'From Old 94, drop into Bell Valley via Rick\'s Notch, follow G-Road south through 16T to 15/4 Turnout, then climb northeast up The Grade to 17T.'
-            },
-            {
-                id: 'q22', zone: '27C', category: 'TURN-BY-TURN ROUTE',
-                text: 'Starting at Potrero Creek (western Zone 27C), how do you follow the northern perimeter road all the way to Bug Out and 18T?',
-                options: [
-                    'Potrero Creek ➔ Buzzards Roost ➔ Old 94 ➔ Rick\'s Notch ➔ Waterfalls ➔ Bee Hives ➔ Bell Valley Rd ➔ National Guard Lot ➔ Bug Out ➔ 18T',
-                    'Potrero Creek ➔ 13T ➔ 14T ➔ 15T ➔ 15/4 Turnout ➔ Bug Out',
-                    'Potrero Creek ➔ Red House ➔ 12T ➔ Tire Shop ➔ 18T',
-                    'Potrero Creek ➔ Four Corners ➔ Camphor Park ➔ 18T'
-                ],
-                correctIndex: 0,
-                routeNodes: ['potrero_creek', 'buzzards_roost', 'old_94', 'ricks_notch', 'dirt_hills', 'the_narrows', 'waterfalls', 'bee_hives', 'bell_valley_rd', 'nat_guard_lot', 'bug_out', '18t'],
-                explanation: 'Follow Old 94 north past Buzzards Roost and Rick\'s Notch onto Bell Valley Rd, passing Dirt Hills, The Narrows, Waterfalls, Bee Hives, and National Guard Lot to Bug Out and 18T.'
-            },
-            {
-                id: 'q23', zone: '27C', category: 'NEXT WAYPOINT',
-                text: 'Which major three-way junction in Zone 27C connects G-Road (15T & 16T) with The Grade?',
-                options: [
-                    '15/4 Turnout',
-                    '3-Corners',
-                    'Four Corners',
-                    '9-Dead'
-                ],
-                correctIndex: 0,
-                routeNodes: ['15t', '16t', 'turnout_15_4', 'the_grade'],
-                explanation: '15/4 Turnout is the pivotal hub in central-south Zone 27C where 15T, 16T (G-Road), and The Grade meet.'
-            },
-            {
-                id: 'q24', zone: '27C', category: 'TURN-BY-TURN ROUTE',
-                text: 'From marker 14T in southern Zone 27C, how do you reach Bell Valley Overlook?',
-                options: [
-                    'Head north from 14T to Bob\'s Porch, then west to Bell Valley Overlook',
-                    'Head south from 14T to 13 Turnout',
-                    'Head east up The Grade to Mountain Shooting Range',
-                    'Head north along Old 94 to Magic Banana'
-                ],
-                correctIndex: 0,
-                routeNodes: ['14t', 'bobs_porch', 'bell_valley_overlook'],
-                explanation: 'From 14T, travel north to Bob\'s Porch and take the western spur to Bell Valley Overlook.'
-            },
-            {
-                id: 'q25', zone: '27C', category: 'NEXT WAYPOINT',
-                text: 'Which two landmarks sit immediately east of marker 17T in eastern Zone 27C?',
-                options: [
-                    'Mountain Shooting Range and Bell Valley (Camp) Village',
-                    'Magic Banana and White Fence / Junk Piles',
-                    'Brickyard and Little Cutie',
-                    'Water Tank and Cement Pillars'
-                ],
-                correctIndex: 0,
-                routeNodes: ['the_grade', '17t', 'shooting_range', 'bell_valley_village'],
-                explanation: 'At the top of The Grade, marker 17T sits right beside Mountain Shooting Range and Bell Valley (Camp) Village.'
-            },
-            {
-                id: 'q26', zone: '27C', category: 'TURN-BY-TURN ROUTE',
-                text: 'Starting at 14T in southern Zone 27C, which sequence of landmarks runs along the southern loop toward Sporting Field?',
-                options: [
-                    '14T ➔ 14 Horseshoe ➔ Hang Balls ➔ 12 Turnout ➔ Sporting Field',
-                    '14T ➔ Bob\'s Porch ➔ G-Road ➔ Bee Hives ➔ Sporting Field',
-                    '14T ➔ Potrero Creek ➔ Buzzards Roost ➔ Magic Banana',
-                    '14T ➔ 13T ➔ Red House ➔ Ridge Road'
-                ],
-                correctIndex: 0,
-                routeNodes: ['14t', '14_horseshoe', 'hang_balls', '12_turnout', 'sporting_field'],
-                explanation: 'The southern loop of Zone 27C runs east from 14T through 14 Horseshoe, Hang Balls, and 12 Turnout to Sporting Field.'
-            },
-            {
-                id: 'q27', zone: '27C', category: 'ZONE & SECTOR ID',
-                text: 'Which Zone contains Magic Banana, White Fence / Junk Piles, and Buzzards Roost along its western ridge?',
-                options: [
-                    'Zone 27C (North-East Sector)',
-                    'Zone 27A (West Sector)',
-                    'Zone 27B (South-East Sector)',
-                    'Zone 27A / 27B Junction'
-                ],
-                correctIndex: 0,
-                routeNodes: ['buzzards_roost', 'white_fence', 'old_94', 'magic_banana'],
-                explanation: 'Buzzards Roost, White Fence / Junk Piles, and Magic Banana are all located along the Old 94 corridor on the west side of Zone 27C.'
-            },
-            {
-                id: 'q28', zone: '27C', category: 'NEXT WAYPOINT',
-                text: 'Traveling along northern Bell Valley Rd between The Narrows and Bee Hives (Zone 27C), which landmark do you pass?',
-                options: [
-                    'Waterfalls',
-                    'Cement Pillars',
-                    '297 Monument',
-                    'Camphor Park'
-                ],
-                correctIndex: 0,
-                routeNodes: ['dirt_hills', 'the_narrows', 'waterfalls', 'bee_hives'],
-                explanation: 'Waterfalls sits on upper Bell Valley Rd directly between The Narrows and Bee Hives.'
-            },
-            {
-                id: 'q29', zone: '27C', category: 'NEXT WAYPOINT',
-                text: 'Which marker lies immediately south of Bug Out and north of 17T on the eastern loop of Zone 27C?',
-                options: [
-                    '18T',
-                    '16T',
-                    '13T',
-                    '8T'
-                ],
-                correctIndex: 0,
-                routeNodes: ['nat_guard_lot', 'bug_out', '18t', '17t'],
-                explanation: 'Marker 18T sits on the northeastern descent between Bug Out / National Guard Lot and 17T.'
-            },
-            {
-                id: 'q30', zone: '27C', category: 'TURN-BY-TURN ROUTE',
-                text: 'How do you travel from 13 Turnout at the southern edge of Zone 27C to 15/4 Turnout?',
-                options: [
-                    '13 Turnout ➔ 13T (G-Road) ➔ 14T ➔ 15T ➔ 15/4 Turnout',
-                    '13 Turnout ➔ Old 94 ➔ National Guard Lot ➔ 15/4 Turnout',
-                    '13 Turnout ➔ Red House ➔ 12T ➔ 11T ➔ 15/4 Turnout',
-                    '13 Turnout ➔ 3-Corners ➔ Four Corners ➔ 15/4 Turnout'
-                ],
-                correctIndex: 0,
-                routeNodes: ['13_turnout', '13t_27c', '14t', '15t', 'turnout_15_4'],
-                explanation: 'Head north from 13 Turnout through 13T (G-Road), 14T, and 15T to arrive directly at 15/4 Turnout.'
-            },
-            {
-                id: 'q31', zone: '27A', category: 'ZONE & SECTOR ID',
-                text: 'Which landmark sits directly north of Water Tank and south of 3-Corners on Airport Rd in Zone 27A?',
-                options: [
-                    'Cement Pillars',
-                    'White Fence / Junk Piles',
-                    '9 Palliat Slides',
-                    'Hang Balls'
-                ],
-                correctIndex: 0,
-                routeNodes: ['airport_rd', 'water_tank', 'cement_pillars', '3_corners'],
-                explanation: 'Cement Pillars is positioned along Airport Rd between Water Tank and 3-Corners in Zone 27A.'
-            },
-            {
-                id: 'q32', zone: '27B', category: 'ZONE & SECTOR ID',
-                text: 'If you are at 12+1 Slope in Zone 27B, which numbered trail marker is immediately north on Ridge Road?',
-                options: [
-                    '12T',
-                    '8T',
-                    '16T',
-                    '4T'
-                ],
-                correctIndex: 0,
-                routeNodes: ['12_1_slope', '12t', 'ridge_road'],
-                explanation: '12+1 Slope sits on the southern spur directly below marker 12T on Ridge Road in Zone 27B.'
-            }
-        ];
-
-        // Exam State
-        let examConfig = {
-            length: 10,
-            zone: 'ALL',
-            timed: true
-        };
-
-        let examSession = {
-            questions: [],
-            currentIndex: 0,
-            score: 0,
-            answered: false,
-            timerInterval: null,
-            secondsLeft: 20,
-            questionStartTime: 0,
-            records: [] // { question, selectedIndex, isCorrect, timeSpent }
-        };
-
-        // ================= INITIALIZE SVG MAPS =================
-        function renderSchematicMap(roadsId, nodesId, labelsId) {
-            const roadsG = document.getElementById(roadsId);
-            const nodesG = document.getElementById(nodesId);
-            const labelsG = document.getElementById(labelsId);
-            if (!roadsG || !nodesG || !labelsG) return;
-
-            roadsG.innerHTML = '';
-            nodesG.innerHTML = '';
-            labelsG.innerHTML = '';
-
-            // Draw Roads
-            MAP_EDGES.forEach(([aId, bId]) => {
-                const a = nodeById[aId];
-                const b = nodeById[bId];
-                if (!a || !b) return;
-                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                line.setAttribute('x1', a.x);
-                line.setAttribute('y1', a.y);
-                line.setAttribute('x2', b.x);
-                line.setAttribute('y2', b.y);
-                line.setAttribute('stroke', '#334155');
-                line.setAttribute('stroke-width', '2.2');
-                line.setAttribute('stroke-linecap', 'round');
-                roadsG.appendChild(line);
-            });
-
-            // Draw Nodes & Key Labels
-            MAP_NODES.forEach(n => {
-                const isMarker = /^\d+T|12\+1|15\/4/.test(n.name);
-                const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                c.setAttribute('id', `${nodesId}-node-${n.id}`);
-                c.setAttribute('cx', n.x);
-                c.setAttribute('cy', n.y);
-                c.setAttribute('r', isMarker ? '4' : '4.5');
-                c.setAttribute('fill', isMarker ? '#fbbf24' : '#64748b');
-                c.setAttribute('stroke', '#090e14');
-                c.setAttribute('stroke-width', '1.2');
-                nodesG.appendChild(c);
-
-                // Show compact labels for markers and major junctions
-                if (isMarker || ['Tecate POE', 'Potrero Park', 'Four Corners', '3-Corners', 'Red House', 'Ridge Road', 'Brickyard', 'Tire Shop', 'Old 94', 'Bell Valley', '15/4 Turnout', 'The Grade', 'Bug Out', '297 Monument'].includes(n.name)) {
-                    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                    t.setAttribute('x', n.x + 6);
-                    t.setAttribute('y', n.y + 3);
-                    t.setAttribute('fill', isMarker ? '#fde68a' : '#94a3b8');
-                    t.setAttribute('font-size', '8.5');
-                    t.setAttribute('font-weight', isMarker ? '700' : '600');
-                    if (isMarker) t.setAttribute('class', 'mono');
-                    t.setAttribute('paint-order', 'stroke');
-                    t.setAttribute('stroke', '#090e14');
-                    t.setAttribute('stroke-width', '2.5');
-                    t.textContent = n.name.replace(' (North 27A)', '').replace(' (Ridge Rd)', '').replace(' (G-Road)', '').replace(' (27A)', '').replace(' (27B)', '');
-                    labelsG.appendChild(t);
-                }
-            });
-        }
-
-        function highlightRouteOnMap(highlightGroupId, nodesPrefix, routeNodeIds, captionId = null) {
-            const hlGroup = document.getElementById(highlightGroupId);
-            if (!hlGroup) return;
-            hlGroup.innerHTML = '';
-
-            // Reset all nodes first
-            MAP_NODES.forEach(n => {
-                const el = document.getElementById(`${nodesPrefix}-node-${n.id}`);
-                if (el) {
-                    const isMarker = /^\d+T|12\+1|15\/4/.test(n.name);
-                    el.setAttribute('r', isMarker ? '4' : '4.5');
-                    el.setAttribute('fill', isMarker ? '#fbbf24' : '#64748b');
-                    el.classList.remove('node-pulse');
-                }
-            });
-
-            if (!routeNodeIds || routeNodeIds.length === 0) return;
-
-            // Draw glowing route path
-            for (let i = 0; i < routeNodeIds.length - 1; i++) {
-                const a = nodeById[routeNodeIds[i]];
-                const b = nodeById[routeNodeIds[i + 1]];
-                if (!a || !b) continue;
-                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                line.setAttribute('x1', a.x);
-                line.setAttribute('y1', a.y);
-                line.setAttribute('x2', b.x);
-                line.setAttribute('y2', b.y);
-                line.setAttribute('stroke', '#f59e0b');
-                line.setAttribute('stroke-width', '5');
-                line.setAttribute('stroke-linecap', 'round');
-                hlGroup.appendChild(line);
-            }
-
-            // Highlight intermediate, start, and destination nodes
-            routeNodeIds.forEach((id, idx) => {
-                const el = document.getElementById(`${nodesPrefix}-node-${id}`);
-                if (!el) return;
-                if (idx === 0) {
-                    el.setAttribute('fill', '#38bdf8'); // Origin Blue
-                    el.setAttribute('r', '7.5');
-                    el.classList.add('node-pulse');
-                } else if (idx === routeNodeIds.length - 1) {
-                    el.setAttribute('fill', '#10b981'); // Destination Emerald
-                    el.setAttribute('r', '8');
-                    el.classList.add('node-pulse');
-                } else {
-                    el.setAttribute('fill', '#fbbf24'); // Waypoint Amber
-                    el.setAttribute('r', '5.5');
-                }
-            });
-
-            if (captionId) {
-                const startName = nodeById[routeNodeIds[0]]?.name || '';
-                const endName = nodeById[routeNodeIds[routeNodeIds.length - 1]]?.name || '';
-                document.getElementById(captionId).textContent = `${startName} ➔ ${endName}`;
-            }
-        }
-
-        // ================= CONFIGURATION CONTROLS =================
-        function selectConfig(key, value) {
-            examConfig[key] = value;
-
-            if (key === 'length') {
-                [10, 20, 30].forEach(len => {
-                    const btn = document.getElementById(`cfg-length-${len}`);
-                    if (len === value) {
-                        btn.className = 'cfg-length-btn p-3.5 rounded-xl border text-left transition bg-emerald-600/20 border-emerald-500 text-white';
-                    } else {
-                        btn.className = 'cfg-length-btn p-3.5 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-slate-700 text-left transition text-slate-300';
-                    }
-                });
-            } else if (key === 'zone') {
-                ['ALL', '27A', '27B', '27C'].forEach(z => {
-                    const btn = document.getElementById(`cfg-zone-${z}`);
-                    if (z === value) {
-                        btn.className = 'cfg-zone-btn p-3 rounded-xl border text-left transition bg-amber-500/20 border-amber-500 text-white';
-                    } else {
-                        btn.className = 'cfg-zone-btn p-3 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-slate-700 text-left transition text-slate-300';
-                    }
-                });
-            } else if (key === 'timed') {
-                [true, false].forEach(t => {
-                    const btn = document.getElementById(`cfg-timed-${t}`);
-                    if (t === value) {
-                        btn.className = 'cfg-timed-btn p-3.5 rounded-xl border text-left transition bg-sky-500/20 border-sky-500 text-white flex items-center justify-between';
-                    } else {
-                        btn.className = 'cfg-timed-btn p-3.5 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-slate-700 text-left transition text-slate-300 flex items-center justify-between';
-                    }
-                });
-            }
-        }
-
-        function switchView(viewName) {
-            ['view-setup', 'view-exam', 'view-results'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
-            document.getElementById(`view-${viewName}`).classList.remove('hidden');
-
-            const abortBtn = document.getElementById('btn-abort-exam');
-            if (viewName === 'exam') {
-                abortBtn.classList.remove('hidden');
-            } else {
-                abortBtn.classList.add('hidden');
-            }
-        }
-
-        function returnToSetup() {
-            clearInterval(examSession.timerInterval);
-            document.getElementById('header-status').textContent = 'STANDBY';
-            document.getElementById('header-score').textContent = '0 / 0';
-            switchView('setup');
-        }
-
-        // ================= START & RUN EXAM =================
-        function shuffleArray(arr) {
-            const copy = [...arr];
-            for (let i = copy.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [copy[i], copy[j]] = [copy[j], copy[i]];
-            }
-            return copy;
-        }
-
-        function startExam(customQuestionList = null) {
-            clearInterval(examSession.timerInterval);
-
-            let pool = customQuestionList;
-            if (!pool) {
-                const filtered = examConfig.zone === 'ALL'
-                    ? QUESTION_BANK
-                    : QUESTION_BANK.filter(q => q.zone === examConfig.zone);
-                pool = shuffleArray(filtered).slice(0, Math.min(examConfig.length, filtered.length));
-            }
-
-            examSession = {
-                questions: pool,
-                currentIndex: 0,
-                score: 0,
-                answered: false,
-                timerInterval: null,
-                secondsLeft: 20,
-                questionStartTime: Date.now(),
-                records: []
-            };
-
-            document.getElementById('header-status').textContent = 'EXAM LIVE';
-            document.getElementById('header-score').textContent = `0 / ${pool.length}`;
-            switchView('exam');
-            renderCurrentQuestion();
-        }
-
-        function renderCurrentQuestion() {
-            clearInterval(examSession.timerInterval);
-            examSession.answered = false;
-            examSession.questionStartTime = Date.now();
-
-            const q = examSession.questions[examSession.currentIndex];
-            const total = examSession.questions.length;
-            const num = examSession.currentIndex + 1;
-
-            // Update Progress & Header
-            document.getElementById('q-counter').textContent = `QUESTION ${num} OF ${total}`;
-            document.getElementById('q-category-badge').textContent = q.category;
-            document.getElementById('q-progress-bar').style.width = `${(num / total) * 100}%`;
-
-            // Zone Badge Styling
-            const zonePill = document.getElementById('q-zone-pill');
-            zonePill.textContent = `ZONE ${q.zone}`;
-            zonePill.className = 'mono text-[11px] font-bold px-2 py-0.5 rounded border ';
-            if (q.zone === '27A') zonePill.className += 'bg-sky-500/20 text-sky-300 border-sky-500/30';
-            else if (q.zone === '27B') zonePill.className += 'bg-amber-500/20 text-amber-300 border-amber-500/30';
-            else zonePill.className += 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
-
-            document.getElementById('q-text').textContent = q.text;
-            document.getElementById('q-feedback-panel').classList.add('hidden');
-
-            // Reset Map Highlight until answered
-            highlightRouteOnMap('svg-highlight-path', 'svg-nodes', []);
-            document.getElementById('map-lock-badge').textContent = 'LOCKED UNTIL ANSWER';
-            document.getElementById('map-lock-badge').className = 'mono text-[10px] px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30';
-            document.getElementById('map-route-caption').textContent = 'Answer to illuminate route';
-
-            // Build Shuffled Options while preserving correct answer tracking
-            const indexedOptions = q.options.map((text, idx) => ({ text, isCorrect: idx === q.correctIndex }));
-            const shuffledOptions = shuffleArray(indexedOptions);
-
-            const optionsList = document.getElementById('q-options-list');
-            optionsList.innerHTML = '';
-            const letters = ['A', 'B', 'C', 'D'];
-
-            shuffledOptions.forEach((opt, idx) => {
-                const btn = document.createElement('button');
-                btn.className = 'exam-opt-btn w-full text-left p-3.5 sm:p-4 rounded-xl bg-slate-950/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-600 transition flex items-start gap-3 group';
-                btn.dataset.isCorrect = opt.isCorrect ? '1' : '0';
-                btn.dataset.optText = opt.text;
-                btn.onclick = () => submitAnswer(btn, opt.isCorrect, opt.text);
-
-                btn.innerHTML = `
-                    <span class="mono w-7 h-7 rounded-lg bg-slate-900 group-hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-300 shrink-0 mt-0.5">${letters[idx]}</span>
-                    <span class="text-xs sm:text-sm font-medium text-slate-200 leading-snug">${opt.text}</span>
                 `;
-                optionsList.appendChild(btn);
-            });
+            } else if (currentMode === 'blitz') {
+                const choices = [currentTargetNode];
+                while (choices.length < 4) {
+                    const rand = NODES[Math.floor(Math.random() * NODES.length)];
+                    if (!choices.includes(rand)) choices.push(rand);
+                }
+                choices.sort(() => Math.random() - 0.5);
 
-            // Handle Countdown Timer
-            const timerBox = document.getElementById('q-timer-box');
-            if (examConfig.timed) {
-                examSession.secondsLeft = 20;
-                timerBox.textContent = `⏱️ 20s`;
-                timerBox.className = 'mono font-extrabold text-sm px-2.5 py-0.5 rounded-lg bg-slate-950 border border-slate-800 text-sky-400';
-                examSession.timerInterval = setInterval(() => {
-                    examSession.secondsLeft--;
-                    timerBox.textContent = `⏱️ ${examSession.secondsLeft}s`;
-                    if (examSession.secondsLeft <= 5) {
-                        timerBox.className = 'mono font-extrabold text-sm px-2.5 py-0.5 rounded-lg bg-rose-950 border border-rose-500/50 text-rose-400 animate-pulse';
-                    }
-                    if (examSession.secondsLeft <= 0) {
-                        clearInterval(examSession.timerInterval);
-                        handleTimeExpired();
-                    }
-                }, 1000);
-            } else {
-                timerBox.textContent = '🧭 UNTIMED';
-                timerBox.className = 'mono font-bold text-xs px-2.5 py-0.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400';
+                body.innerHTML = `
+                    <div class="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-3">
+                        <div class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Identify Location (${currentTargetNode.zone})</div>
+                        <p class="text-xs text-slate-200 font-medium">${currentTargetNode.desc}</p>
+                        <div class="grid grid-cols-1 gap-2 pt-1">
+                            ${choices.map(c => `
+                                <button onclick="checkAnswer(${c.id === currentTargetNode.id})" class="w-full text-left p-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-200 transition">
+                                    ${c.name}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
             }
         }
 
-        function handleTimeExpired() {
-            if (examSession.answered) return;
-            submitAnswer(null, false, 'TIME EXPIRED (No Selection)');
-        }
-
-        function submitAnswer(clickedBtn, isCorrect, selectedText) {
-            if (examSession.answered) return;
-            examSession.answered = true;
-            clearInterval(examSession.timerInterval);
-
-            const timeSpent = Math.min(20, Math.max(1, Math.round((Date.now() - examSession.questionStartTime) / 1000)));
-            const q = examSession.questions[examSession.currentIndex];
+        function checkAnswer(isCorrect) {
+            totalAttempts++;
+            const feedback = document.getElementById('feedback-box');
+            feedback.classList.remove('hidden');
 
             if (isCorrect) {
-                examSession.score++;
-            }
-
-            examSession.records.push({
-                question: q,
-                selectedText: selectedText,
-                correctText: q.options[q.correctIndex],
-                isCorrect: isCorrect,
-                timeSpent: timeSpent
-            });
-
-            document.getElementById('header-score').textContent = `${examSession.score} / ${examSession.questions.length}`;
-
-            // Style all option buttons
-            document.querySelectorAll('.exam-opt-btn').forEach(btn => {
-                btn.disabled = true;
-                const btnCorrect = btn.dataset.isCorrect === '1';
-                if (btnCorrect) {
-                    btn.className = 'exam-opt-btn w-full text-left p-3.5 sm:p-4 rounded-xl bg-emerald-950/80 border-2 border-emerald-500 flex items-start gap-3';
-                } else if (btn === clickedBtn && !isCorrect) {
-                    btn.className = 'exam-opt-btn w-full text-left p-3.5 sm:p-4 rounded-xl bg-rose-950/80 border-2 border-rose-500 flex items-start gap-3 animate-shake';
-                } else {
-                    btn.className = 'exam-opt-btn w-full text-left p-3.5 sm:p-4 rounded-xl bg-slate-950/40 border border-slate-800/60 opacity-55 flex items-start gap-3';
-                }
-            });
-
-            // Illuminate exact route on the SVG Verification Mini-Map
-            highlightRouteOnMap('svg-highlight-path', 'svg-nodes', q.routeNodes, 'map-route-caption');
-            document.getElementById('map-lock-badge').textContent = 'ROUTE VERIFIED';
-            document.getElementById('map-lock-badge').className = 'mono text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
-
-            // Show Feedback Panel
-            const fbPanel = document.getElementById('q-feedback-panel');
-            const fbText = document.getElementById('q-feedback-text');
-            fbPanel.classList.remove('hidden', 'bg-emerald-950/60', 'border-emerald-500/40', 'text-emerald-200', 'bg-rose-950/60', 'border-rose-500/40', 'text-rose-200');
-
-            if (isCorrect) {
-                fbPanel.classList.add('bg-emerald-950/60', 'border-emerald-500/40', 'text-emerald-200');
-                fbText.innerHTML = `<strong>✅ Verified Accurate!</strong> ${q.explanation}`;
+                score += 100 + (streak * 10);
+                streak++;
+                correctAnswers++;
+                feedback.className = 'rounded-xl p-3 border text-xs font-medium bg-emerald-500/10 border-emerald-500/30 text-emerald-300';
+                feedback.innerHTML = `✅ <strong>Correct!</strong> Landmark identified accurately. (+100 pts)`;
             } else {
-                fbPanel.classList.add('bg-rose-950/60', 'border-rose-500/40', 'text-rose-200');
-                fbText.innerHTML = `<strong>❌ Navigation Error:</strong> ${q.explanation}`;
+                streak = 0;
+                feedback.className = 'rounded-xl p-3 border text-xs font-medium bg-rose-500/10 border-rose-500/30 text-rose-300 animate-shake';
+                feedback.innerHTML = `❌ <strong>Incorrect.</strong> Target was <strong>${currentTargetNode.name}</strong> (${currentTargetNode.zone}).`;
             }
 
-            const nextBtn = document.getElementById('btn-next-q');
-            if (examSession.currentIndex === examSession.questions.length - 1) {
-                nextBtn.innerHTML = '<span>View Final Scorecard</span><span>🏁</span>';
-            } else {
-                nextBtn.innerHTML = '<span>Next Question</span><span>➔</span>';
-            }
+            updateStats();
         }
 
-        function nextQuestion() {
-            if (examSession.currentIndex < examSession.questions.length - 1) {
-                examSession.currentIndex++;
-                renderCurrentQuestion();
-            } else {
-                finishExam();
-            }
+        function updateStats() {
+            document.getElementById('stat-score').textContent = score;
+            document.getElementById('stat-streak').textContent = `${streak}🔥`;
+            const acc = totalAttempts > 0 ? Math.round((correctAnswers / totalAttempts) * 100) : 100;
+            document.getElementById('stat-acc').textContent = `${acc}%`;
         }
 
-        // ================= SCORECARD & MISSED-ROUTE REVIEW =================
-        function finishExam() {
-            clearInterval(examSession.timerInterval);
-            document.getElementById('header-status').textContent = 'COMPLETED';
-            switchView('results');
-
-            const total = examSession.records.length;
-            const correctCount = examSession.score;
-            const pct = total === 0 ? 0 : Math.round((correctCount / total) * 100);
-            const avgTime = total === 0 ? 0 : (examSession.records.reduce((acc, r) => acc + r.timeSpent, 0) / total).toFixed(1);
-
-            document.getElementById('res-percent').textContent = `${pct}%`;
-            document.getElementById('res-avg-time').textContent = `${avgTime}s`;
-            document.getElementById('res-summary-sub').textContent = `You answered ${correctCount} out of ${total} Potrero tactical navigation questions correctly.`;
-
-            const badge = document.getElementById('res-grade-badge');
-            if (pct >= 80) {
-                badge.textContent = 'SECTOR CERTIFIED (PASS)';
-                badge.className = 'mono text-xs font-bold px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 uppercase';
-                document.getElementById('res-percent').className = 'mono text-3xl sm:text-4xl font-black text-emerald-400';
-            } else {
-                badge.textContent = 'ADDITIONAL RECON REQUIRED';
-                badge.className = 'mono text-xs font-bold px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase';
-                document.getElementById('res-percent').className = 'mono text-3xl sm:text-4xl font-black text-amber-400';
-            }
-
-            // Zone Breakdown Stats
-            ['27A', '27B', '27C'].forEach(z => {
-                const zRecs = examSession.records.filter(r => r.question.zone === z);
-                const zRight = zRecs.filter(r => r.isCorrect).length;
-                const zPct = zRecs.length === 0 ? 100 : Math.round((zRight / zRecs.length) * 100);
-                const key = z.toLowerCase();
-                document.getElementById(`res-${key}-acc`).textContent = zRecs.length === 0 ? 'N/A' : `${zPct}%`;
-                document.getElementById(`res-${key}-detail`).textContent = zRecs.length === 0 ? 'Not tested in filter' : `${zRight} / ${zRecs.length} correct`;
-                document.getElementById(`res-${key}-bar`).style.width = zRecs.length === 0 ? '0%' : `${zPct}%`;
-            });
-
-            // Missed Questions Button
-            const missedRecords = examSession.records.filter(r => !r.isCorrect);
-            const retakeMissedBtn = document.getElementById('btn-retake-missed');
-            if (missedRecords.length > 0) {
-                retakeMissedBtn.classList.remove('hidden');
-                retakeMissedBtn.textContent = `🎯 Retake Missed Questions Only (${missedRecords.length})`;
-            } else {
-                retakeMissedBtn.classList.add('hidden');
-            }
-
-            document.getElementById('review-count-badge').textContent = `${missedRecords.length} Missed`;
-
-            // Populate Review List (Missed items prioritized at top, followed by correct items)
-            const sortedForReview = [
-                ...missedRecords,
-                ...examSession.records.filter(r => r.isCorrect)
-            ];
-
-            const reviewList = document.getElementById('review-items-list');
-            reviewList.innerHTML = '';
-
-            sortedForReview.forEach((rec, idx) => {
-                const card = document.createElement('div');
-                card.className = `p-3.5 rounded-xl border cursor-pointer transition ${
-                    rec.isCorrect
-                        ? 'bg-slate-950/60 border-slate-800 hover:border-slate-600'
-                        : 'bg-rose-950/25 border-rose-500/40 hover:border-rose-400'
-                }`;
-                card.onclick = () => inspectReviewRecord(rec);
-
-                card.innerHTML = `
-                    <div class="flex items-center justify-between gap-2 mb-1.5">
-                        <div class="flex items-center gap-2">
-                            <span class="mono text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300">ZONE ${rec.question.zone}</span>
-                            <span class="mono text-[10px] text-slate-400">${rec.question.category}</span>
-                        </div>
-                        <span class="text-xs font-bold ${rec.isCorrect ? 'text-emerald-400' : 'text-rose-400'}">
-                            ${rec.isCorrect ? '✅ Correct' : '❌ Missed'}
-                        </span>
+        // ==========================================
+        // ROUTE NAV PLANNER (SHORTEST PATH BFS)
+        // ==========================================
+        function renderRoutePanel() {
+            const body = document.getElementById('mission-body');
+            const sortedNodes = [...NODES].sort((a, b) => a.name.localeCompare(b.name));
+            body.innerHTML = `
+                <div class="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-3">
+                    <div class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Tactical Route Planner</div>
+                    <p class="text-xs text-slate-300">Select origin and destination to calculate the shortest road/trail route across Zones 27A, 27B, and 27C.</p>
+                    <div class="space-y-2">
+                        <select id="route-start" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-slate-200">
+                            <option value="">-- Select Origin --</option>
+                            ${sortedNodes.map(n => `<option value="${n.id}">${n.name} (${n.zone})</option>`).join('')}
+                        </select>
+                        <select id="route-end" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-slate-200">
+                            <option value="">-- Select Destination --</option>
+                            ${sortedNodes.map(n => `<option value="${n.id}">${n.name} (${n.zone})</option>`).join('')}
+                        </select>
+                        <button onclick="calculateRoute()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow transition">
+                            Calculate Tactical Route 🛣️
+                        </button>
                     </div>
-                    <div class="text-xs font-bold text-white mb-2">${rec.question.text}</div>
-                    ${!rec.isCorrect ? `<div class="text-[11px] text-rose-300 mb-1">Your Answer: ${rec.selectedText}</div>` : ''}
-                    <div class="text-[11px] text-emerald-300 font-semibold">Correct Route: ${rec.correctText}</div>
-                `;
-                reviewList.appendChild(card);
-            });
+                </div>
+            `;
+        }
 
-            // Auto-highlight first review item on Review Map
-            if (sortedForReview.length > 0) {
-                inspectReviewRecord(sortedForReview[0]);
+        function calculateRoute() {
+            const startId = document.getElementById('route-start').value;
+            const endId = document.getElementById('route-end').value;
+            const feedback = document.getElementById('feedback-box');
+            const highlightLayer = document.getElementById('route-highlight-layer');
+            highlightLayer.innerHTML = '';
+
+            if (!startId || !endId || startId === endId) {
+                feedback.classList.remove('hidden');
+                feedback.className = 'rounded-xl p-3 border text-xs font-medium bg-amber-500/10 border-amber-500/30 text-amber-300';
+                feedback.textContent = '⚠️ Please select two different valid locations.';
+                return;
             }
-        }
 
-        function inspectReviewRecord(rec) {
-            highlightRouteOnMap('rev-svg-highlight', 'rev-svg-nodes', rec.question.routeNodes);
-            document.getElementById('review-map-zone').textContent = `ZONE ${rec.question.zone}`;
-            document.getElementById('review-map-caption').innerHTML = `<strong class="text-amber-400">Zone ${rec.question.zone}:</strong> ${rec.question.explanation}`;
-        }
+            // BFS shortest path
+            const queue = [[startId]];
+            const visited = new Set([startId]);
+            let foundPath = null;
 
-        function retakeMissedOnly() {
-            const missedQs = examSession.records
-                .filter(r => !r.isCorrect)
-                .map(r => r.question);
-            if (missedQs.length > 0) {
-                startExam(shuffleArray(missedQs));
+            while (queue.length > 0) {
+                const path = queue.shift();
+                const curr = path[path.length - 1];
+                if (curr === endId) {
+                    foundPath = path;
+                    break;
+                }
+                const neighbors = EDGES.filter(e => e.from === curr || e.to === curr)
+                    .map(e => (e.from === curr ? e.to : e.from));
+                for (const next of neighbors) {
+                    if (!visited.has(next)) {
+                        visited.add(next);
+                        queue.push([...path, next]);
+                    }
+                }
             }
+
+            feedback.classList.remove('hidden');
+            if (!foundPath) {
+                feedback.className = 'rounded-xl p-3 border text-xs font-medium bg-rose-500/10 border-rose-500/30 text-rose-300';
+                feedback.textContent = '❌ No direct road/trail link mapped between these two nodes.';
+                return;
+            }
+
+            // Draw glowing route lines on SVG
+            for (let i = 0; i < foundPath.length - 1; i++) {
+                const n1 = NODES.find(n => n.id === foundPath[i]);
+                const n2 = NODES.find(n => n.id === foundPath[i + 1]);
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', n1.x);
+                line.setAttribute('y1', n1.y);
+                line.setAttribute('x2', n2.x);
+                line.setAttribute('y2', n2.y);
+                line.setAttribute('stroke', '#38bdf8');
+                line.setAttribute('stroke-width', '6');
+                line.setAttribute('stroke-linecap', 'round');
+                highlightLayer.appendChild(line);
+            }
+
+            const names = foundPath.map(id => NODES.find(n => n.id === id).name);
+            feedback.className = 'rounded-xl p-3 border text-xs font-medium bg-sky-500/10 border-sky-500/30 text-sky-300 space-y-1.5';
+            feedback.innerHTML = `
+                <div>📍 <strong>Route Plotted (${foundPath.length - 1} legs):</strong></div>
+                <div class="text-[11px] text-slate-200 leading-relaxed">${names.join(' ➔ ')}</div>
+            `;
         }
 
-        // Boot Maps on Load
-        window.onload = function () {
-            renderSchematicMap('svg-roads', 'svg-nodes', 'svg-labels');
-            renderSchematicMap('rev-svg-roads', 'rev-svg-nodes', 'rev-svg-labels');
-        };
+        window.onload = initMap;
     </script>
 </body>
 </html>
