@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Interactive Potrero, California Zone 27 road and landmark drag-and-drop study game.">
+<title>Potrero Map Challenge</title>
+<style>
+:root{--ink:#18212f;--muted:#64748b;--line:#dbe2ea;--panel:#f5f7fa;--green:#16794b;--green-bg:#e8f6ee;--red:#b42318;--red-bg:#fff0ef;--blue:#2459a6}
+*{box-sizing:border-box}body{margin:0;background:#eef2f6;color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:900px;margin:28px auto;padding:0 16px 40px}.app{background:white;border:1px solid var(--line);border-radius:20px;padding:clamp(16px,3vw,28px);box-shadow:0 8px 28px #17203312}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}h1{font-size:clamp(1.5rem,4vw,2.2rem);margin:0}.eyebrow{font-size:.76rem;letter-spacing:.1em;font-weight:750;color:var(--muted)}.score{text-align:right}.score strong{display:block;font-size:1.8rem}
+.progress{display:flex;gap:5px;margin:20px 0}.progress span{height:7px;flex:1;border-radius:9px;background:var(--line)}.progress span.active{background:var(--green)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.pill{background:#edf2f8;border-radius:30px;padding:4px 10px;font-size:.8rem;font-weight:700}
+.panel{border:1px solid var(--line);border-radius:14px;padding:15px;margin-top:15px}.panel h2{font-size:1.05rem;margin:0 0 5px}.hint{color:var(--muted);font-size:.88rem;margin:0 0 12px}
+.bank{display:flex;flex-wrap:wrap;gap:9px}.chip{border:1px solid #cbd5e1;background:#f8fafc;border-radius:9px;padding:9px 12px;font-weight:700;cursor:grab;user-select:none;touch-action:manipulation}.chip:focus-visible,button:focus-visible,.target:focus-visible{outline:3px solid #7aa7ee;outline-offset:2px}.chip.selected{outline:2px solid var(--blue);background:#eaf1ff}.chip.used{opacity:.35;cursor:not-allowed}
+.question{padding:12px 0;border-bottom:1px solid #edf0f4}.question:last-child{border:0}.q-label{font-size:.75rem;font-weight:800;letter-spacing:.07em;color:var(--muted)}.clue{margin:4px 0 9px}.target{min-height:45px;border:2px dashed #aab6c5;border-radius:9px;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;cursor:pointer}.target.over{border-color:var(--blue);background:#eef4ff}.target.correct{border:1px solid var(--green);background:var(--green-bg)}.target.incorrect{border:1px solid var(--red);background:var(--red-bg)}.target .placeholder{color:var(--muted)}
+.message{padding:12px;border-radius:10px;background:var(--panel);margin-top:14px;min-height:48px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}button{border:0;border-radius:9px;padding:11px 15px;font:inherit;font-size:.9rem;font-weight:750;cursor:pointer}.primary{background:var(--green);color:white;flex:1}.secondary{background:white;border:1px solid var(--line);color:var(--ink)}button:disabled{opacity:.45;cursor:not-allowed}
+.map-area{margin-top:16px}.map-area summary{cursor:pointer;font-weight:750}.map-area img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:10px;margin-top:12px}
+.finish{display:none;text-align:center;background:var(--green-bg);border:1px solid #a8d8ba;border-radius:14px;padding:18px;margin-top:15px}.finish.show{display:block}.finish h2{margin:5px}.small{font-size:.82rem;color:var(--muted)}footer{text-align:center;color:var(--muted);font-size:.8rem;margin-top:18px}
+@media(max-width:520px){main{margin:12px auto}.app{border-radius:14px}.target{font-size:.9rem}}
+</style>
+</head>
+<body>
+<main><div class="app">
+<header>
+ <div><div class="eyebrow">ZONE 27 • POTRERO, CALIFORNIA</div><h1>🗺️ Potrero Map Challenge</h1></div>
+ <div class="score"><span class="small">YOUR SCORE</span><strong id="score">0</strong></div>
+</header>
+<div class="progress" id="progress" aria-label="Round progress"></div>
+<div class="row"><strong id="round-title">Round 1 • Zone 27 A/B</strong><span class="pill" id="count">0 / 6 placed</span></div>
+<section class="panel">
+ <h2>① Name bank</h2><p class="hint">Drag a name into a blank, or tap a name and then tap the matching blank.</p>
+ <div class="bank" id="bank"></div>
+</section>
+<section class="panel">
+ <h2>② Fill in the missing names</h2>
+ <div id="questions"></div>
+</section>
+<div class="message" id="message" role="status" aria-live="polite">Choose a name above and place it in the matching blank.</div>
+<div class="actions"><button class="primary" id="check">Check answers</button><button class="secondary" id="reset">Reset round</button></div>
+<div class="finish" id="finish"><div style="font-size:2rem">🏆</div><h2>Round complete!</h2><p id="result"></p><button class="primary" id="next">Next round →</button></div>
+<details class="map-area"><summary>Open the study maps</summary>
+ <p class="small">Use these original uploaded maps as references while studying.</p>
+ <h3>Zone 27 A/B</h3><img src="assets/zone-27-ab.jpeg" alt="Uploaded Potrero Zone 27 A/B map">
+ <h3>Zone 27 B/C</h3><img src="assets/zone-27-bc.jpeg" alt="Uploaded Potrero Zone 27 B/C map">
+</details>
+<p class="small" style="margin-top:14px">10 points per correct answer • Complete a round to unlock the next one.</p>
+</div><footer>Potrero Map Challenge • A personal study game</footer></main>
+<script>
+"use strict";
+const rounds=[
+ {zone:"A/B",items:[
+  ["Emery RD","The pink road passing Samural Curves and Tecate Flats.","ROAD"],
+  ["Airport RD","The yellow road branching off near the pink Emery RD.","ROAD"],
+  ["Humphries RD","The yellow road running across the lower part of the map.","ROAD"],
+  ["HWY 94","The green highway crossing the upper part of the map.","ROAD"],
+  ["Hammer's Gate","The landmark near the top edge of Zone A/B.","LANDMARK"],
+  ["White Gate","The red landmark on the right side of Zone A/B.","LANDMARK"]
+ ]},
+ {zone:"B/C",items:[
+  ["Ridge RD","The pink road running below HWY 94.","ROAD"],
+  ["Northern Loop RD","The road labeled Northern Loop in the central loop area.","ROAD"],
+  ["Southern Loop RD","The road labeled Southern Loop below Northern Loop.","ROAD"],
+  ["G-Road","The green road crossing the lower-middle area.","ROAD"],
+  ["Border RD","The road running along the black border line.","ROAD"],
+  ["Bell Valley Bridge","The pink landmark near the lower-right corner.","LANDMARK"]
+ ]},
+ {zone:"Mixed review",items:[
+  ["Potrero Fire Station","The landmark near the Post Office on HWY 94.","LANDMARK"],
+  ["Potrero Cafe","The landmark just below HWY 94 near the fire station.","LANDMARK"],
+  ["Radio Tower Scope","The red landmark near Ridge RD.","LANDMARK"],
+  ["Dry Pond (Mauricio's)","The red landmark near the left-middle portion of the B/C map.","LANDMARK"],
+  ["The Horseshoe","The yellow landmark near the lower middle of the B/C map.","LANDMARK"],
+  ["Brickyard Highpoint","The yellow landmark near the lower-right of the A/B map.","LANDMARK"]
+ ]}
+];
+let roundIndex=0,placements={},selected=null,score=0,checked=false,completed=false;
+const $=id=>document.getElementById(id);
+const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b};
+function render(){
+ const data=rounds[roundIndex];placements={};selected=null;checked=false;completed=false;
+ $("round-title").textContent=`Round ${roundIndex+1} • ${roundIndex===2?"Mixed review":"Zone 27 "+data.zone}`;
+ $("message").textContent="Drag a name into its matching blank, or tap a name and then a blank.";
+ $("finish").classList.remove("show");$("score").textContent=score;
+ $("progress").innerHTML=rounds.map((_,i)=>`<span class="${i<=roundIndex?"active":""}"></span>`).join("");
+ $("bank").innerHTML="";
+ shuffle(data.items.map((_,i)=>i)).forEach(i=>{
+  const chip=document.createElement("button");chip.type="button";chip.className="chip";chip.draggable=true;chip.dataset.index=i;chip.textContent=data.items[i][0];
+  chip.addEventListener("dragstart",e=>{e.dataTransfer.setData("text/plain",String(i));e.dataTransfer.effectAllowed="move"});
+  chip.addEventListener("click",()=>{if(checked)return;selected=i;document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("selected",Number(c.dataset.index)===i));$("message").textContent=`Selected ${data.items[i][0]}. Now tap its matching blank.`});
+  $("bank").append(chip);
+ });
+ $("questions").innerHTML="";
+ data.items.forEach((item,i)=>{
+  const wrap=document.createElement("div");wrap.className="question";
+  const label=document.createElement("div");label.className="q-label";label.textContent=`${i+1}. ${item[2]}`;
+  const clue=document.createElement("div");clue.className="clue";clue.textContent=item[1];
+  const target=document.createElement("div");target.className="target";target.tabIndex=0;target.setAttribute("role","button");target.setAttribute("aria-label",`Answer blank ${i+1}`);
+  target.dataset.target=i;target.innerHTML='<span class="placeholder">Drop name here…</span><span>＋</span>';
+  target.addEventListener("dragover",e=>{if(!checked){e.preventDefault();target.classList.add("over")}});
+  target.addEventListener("dragleave",()=>target.classList.remove("over"));
+  target.addEventListener("drop",e=>{e.preventDefault();target.classList.remove("over");if(!checked)place(i,Number(e.dataTransfer.getData("text/plain")))});
+  target.addEventListener("click",()=>{if(selected!==null&&!checked)place(i,selected)});
+  target.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&selected!==null&&!checked){e.preventDefault();place(i,selected)}});
+  wrap.append(label,clue,target);$("questions").append(wrap);
+ });
+ update();
+}
+function place(target,index){if(checked||!Number.isInteger(index)||!rounds[roundIndex].items[index])return;placements[target]=index;selected=null;document.querySelectorAll(".chip").forEach(c=>c.classList.remove("selected"));renderTargets();update()}
+function renderTargets(){
+ document.querySelectorAll(".target").forEach(t=>{const i=Number(t.dataset.target),v=placements[i];t.classList.remove("correct","incorrect");t.innerHTML=v===undefined?'<span class="placeholder">Drop name here…</span><span>＋</span>':`<strong>${rounds[roundIndex].items[v][0]}</strong><span>↻</span>`;if(checked)t.classList.add(v===i?"correct":"incorrect")});
+}
+function update(){
+ $("count").textContent=`${Object.keys(placements).length} / 6 placed`;
+ $("bank").querySelectorAll(".chip").forEach(c=>{const used=Object.values(placements).includes(Number(c.dataset.index));c.classList.toggle("used",used);c.disabled=used||checked});
+}
+$("check").addEventListener("click",()=>{
+ if(checked||completed)return;
+ if(Object.keys(placements).length<6){$("message").textContent="Fill all six blanks before checking your answers.";return}
+ checked=true;const hits=rounds[roundIndex].items.filter((_,i)=>placements[i]===i).length;
+ score+=hits*10;$("score").textContent=score;renderTargets();update();
+ $("message").textContent=hits===6?"🎉 Perfect round! All six answers are correct!":`You got ${hits} out of 6 correct. Green blanks are correct; red blanks need another look.`;
+ if(hits===6){completed=true;$("finish").classList.add("show");$("result").textContent=`You earned ${hits*10} points this round. Total score: ${score}.`;$("next").textContent=roundIndex===rounds.length-1?"Play again ↻":"Next round →"}
+ else{
+  $("check").textContent="Check answers";$("check").disabled=true;
+  const retry=document.createElement("button");retry.className="secondary";retry.id="retry";retry.textContent="Correct my mistakes";$("check").parentNode.append(retry);
+  retry.addEventListener("click",()=>{checked=false;for(let i=0;i<6;i++)if(placements[i]!==i)delete placements[i];retry.remove();$("check").disabled=false;renderTargets();update();$("message").textContent="Try the red blanks again!"});
+ }
+});
+$("reset").addEventListener("click",()=>{const retry=$("retry");if(retry)retry.remove();$("check").disabled=false;$("check").textContent="Check answers";render()});
+$("next").addEventListener("click",()=>{if(roundIndex===rounds.length-1){roundIndex=0;score=0}else roundIndex++;render()});
+render();
+</script>
+</body>
+</html>
